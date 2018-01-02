@@ -52,10 +52,10 @@
   background: #eef2e1;
 }
 
-.red_piece {
+.white_piece {
   width:40px;
   height: 40px;
-  background-image: url("red.png");
+  background-image: url("white.png");
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }

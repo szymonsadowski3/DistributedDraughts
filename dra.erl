@@ -70,5 +70,6 @@ getStartingBoard() ->
 
 getMove(Board, Black) ->
   Board;
+
 getMove(Board, White) ->
   Board.

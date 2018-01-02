@@ -14,7 +14,7 @@ function updateBoard(board_data) {
   for (var i = 0; i < COLS; ++i) {
     for (var j = 0; j < COLS; ++j) {
       if (board_data[i * COLS + j] == 1) {
-        table.rows[i].children[j].innerHTML = '<div class="red_piece"></div>';
+        table.rows[i].children[j].innerHTML = '<div class="white_piece"></div>';
       } else if (board_data[i * COLS + j] == 2) {
         table.rows[i].children[j].innerHTML = '<div class="black_piece"></div>';
       }
