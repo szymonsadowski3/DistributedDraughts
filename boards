@@ -1,0 +1,12 @@
+Board10 = [
+empty, black, empty, black, empty, black, empty, black, empty, black,
+black, empty, black, empty, black, empty, black, empty, black, empty,
+empty, black, empty, black, empty, black, empty, black, empty, black,
+black, empty, black, empty, black, empty, black, empty, black, empty,
+empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
+empty, white, empty, white, empty, white, empty, white, empty, white,
+white, empty, white, empty, white, empty, white, empty, white, empty,
+empty, white, empty, white, empty, white, empty, white, empty, white,
+white, empty, white, empty, white, empty, white, empty, white, empty
+]
