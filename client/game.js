@@ -11,8 +11,6 @@ $(document).ready(function() {
 function updateBoard(board_data) {
   var table = $(".board").find("table")[0];
 
-  console.dir(table.rows[0]);
-
   for (var i = 0; i < COLS; ++i) {
     for (var j = 0; j < COLS; ++j) {
       if (board_data[i * COLS + j] == 1) {

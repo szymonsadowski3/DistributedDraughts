@@ -50,7 +50,8 @@ server_start()->
 %% develop
 
 getOutputBoard(Board) ->
-  BoardList = maps:values(Board),
+  BoardList = [maps:get(Index, Board) || Index <- lists:seq(1,100)],
+  % BoardList = maps:values(Board),
   IOList = io_lib:format("~w", [BoardList]).
 
 getStartingBoard() ->
