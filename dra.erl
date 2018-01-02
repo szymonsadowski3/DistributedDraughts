@@ -7,6 +7,7 @@
 -export([cross_domains/3]).
 -export([get/3]).
 -export([terminate/4]).
+-export([server_start/0]).
 
 %% Cross Domain Origin
 %% It accepts any host for cross-domain requests
@@ -19,18 +20,7 @@ init(_Route, _Req, State) ->
 get("/", _Req, State) ->
     {<<"Hello, leptus!">>, State};
 get("/board", _Req, State) ->
-    Board = [
-    empty, black, empty, black, empty, black, empty, black, empty, black,
-    black, empty, black, empty, black, empty, black, empty, black, empty,
-    empty, black, empty, black, empty, black, empty, black, empty, black,
-    black, empty, black, empty, black, empty, black, empty, black, empty,
-    empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
-    empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
-    empty, white, empty, white, empty, white, empty, white, empty, white,
-    white, empty, white, empty, white, empty, white, empty, white, empty,
-    empty, white, empty, white, empty, white, empty, white, empty, white,
-    white, empty, white, empty, white, empty, white, empty, white, empty
-    ],
+    Board = start(),
     IOList = io_lib:format("~w", [Board]),
     {IOList, State};
 get("/hi/:name", Req, State) ->
@@ -45,16 +35,19 @@ terminate(_Reason, _Route, _Req, _State) ->
 
 %% develop
 
+server_start()->
+  leptus:start_listener(http, [{'_', [{dra, undefined_state}]}]).
+
 start() ->
   Board = [
-  empty, black, empty, black, empty, black, empty, black, empty, black,
-  black, empty, black, empty, black, empty, black, empty, black, empty,
-  empty, black, empty, black, empty, black, empty, black, empty, black,
-  black, empty, black, empty, black, empty, black, empty, black, empty,
-  empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
-  empty, empty, empty, empty, empty, empty, empty, empty, empty, empty,
-  empty, white, empty, white, empty, white, empty, white, empty, white,
-  white, empty, white, empty, white, empty, white, empty, white, empty,
-  empty, white, empty, white, empty, white, empty, white, empty, white,
-  white, empty, white, empty, white, empty, white, empty, white, empty
+  0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+  1, 0, 1, 0, 1, 0, 1, 0, 1, 0,
+  0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+  1, 0, 1, 0, 1, 0, 1, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 2, 0, 2, 0, 2, 0, 2, 0, 2,
+  2, 0, 2, 0, 2, 0, 2, 0, 2, 0,
+  0, 2, 0, 2, 0, 2, 0, 2, 0, 2,
+  2, 0, 2, 0, 2, 0, 2, 0, 2, 0
   ].
