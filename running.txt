@@ -1,0 +1,9 @@
+rebar3 get-deps
+rebar3 compile
+
+erl -pa ebin .\_build\default\lib\ranch\ebin .\_build\default\lib\leptus\eb
+in .\_build\default\lib\cowlib\ebin .\_build\default\lib\cowboy\ebin
+
+c(hello).
+
+leptus:start_listener(http, [{'_', [{hello, undefined_state}]}]).
