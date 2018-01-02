@@ -1,0 +1,69 @@
+/* body {
+  background: #262626;
+}
+
+.game_square {
+  width: 80px;
+  height: 80px;
+  background: #59be67;
+  float: left;
+}
+
+.game_row {
+  height: 80px;
+}
+
+.board {
+  width: 640px;
+  height: 640px;
+  display: flex;
+}
+
+.game_row:nth-child(2n) .game_square:nth-child(2n) {
+  background: #eef2e1;
+}
+
+.game_row:nth-child(2n+1) .game_square:nth-child(2n+1) {
+    background: #eef2e1;
+} */
+
+.board table {
+  border-spacing: 0px;
+}
+
+.board td {
+  padding: 0;
+}
+
+.board table td {
+  width:40px;
+  height: 40px;
+  border: 1px solid #000;
+  margin: 0;
+}
+
+.board td {background-color: #59be67}
+
+.board tr:nth-child(2n) td:nth-child(2n) {
+  background: #eef2e1;
+}
+
+.board tr:nth-child(2n+1) td:nth-child(2n+1) {
+  background: #eef2e1;
+}
+
+.red_piece {
+  width:40px;
+  height: 40px;
+  background-image: url("red.png");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.black_piece {
+  width:40px;
+  height: 40px;
+  background-image: url("black.png");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
