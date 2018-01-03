@@ -4,3 +4,8 @@ rebar3 compile
 erl -pa ebin .\_build\default\lib\ranch\ebin .\_build\default\lib\leptus\ebin .\_build\default\lib\cowlib\ebin .\_build\default\lib\cowboy\ebin
 
 leptus:start_listener(http, [{'_', [{dra, undefined_state}]}]).
+
+
+dra:getElementFromBoard(dra:getStartingBoard(), {6, 3}).
+
+dra:findLegalJumpMove(dra:getTestBoard(), {6, 2}, 2).
