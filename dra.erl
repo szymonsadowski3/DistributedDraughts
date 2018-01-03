@@ -47,8 +47,8 @@ findSimpleMoves(Board, FromRowCol) ->
   [Pos || Pos <- ListOfPosLeftAndRight, isWithinBounds(Pos) and isEmpty(Board, Pos)].
 
 findLegalJumpMove(Board, FromRowCol, ForWho) ->
+  io:format("FromRowCol:~p\n", [FromRowCol]),
   Sign = (if ForWho == 1 -> 1; true -> -1 end), % 1 for white, -1 for black
-  io:format("The Sign is: ~p\n", [Sign]),
 
   {Row, Col} = FromRowCol,
   ThroughLeft = {Row + Sign*1, Col - 1},
@@ -59,26 +59,19 @@ findLegalJumpMove(Board, FromRowCol, ForWho) ->
   IsFinalLeftFieldEmpty = isEmpty(Board, ToLeft),
   IsLeftLegit = IsLeftJumpWithinBounds and IsThroughLeftOpposite and IsFinalLeftFieldEmpty,
 
-  io:format("IsLeftJumpWithinBounds: ~p\n", [IsLeftJumpWithinBounds]),
-  io:format("IsThroughLeftOpposite: ~p\n", [IsThroughLeftOpposite]),
-  io:format("IsFinalLeftFieldEmpty: ~p\n", [IsFinalLeftFieldEmpty]),
-  io:format("IsLeftLegit: ~p\n", [IsLeftLegit]),
-
   ThroughRight = {Row + Sign*1, Col + 1},
   ToRight = {Row + Sign*2, Col + 2},
-
-  io:format("ElFrom: ~p\n", [getElementFromBoard(Board, FromRowCol)]),
-  io:format("ElThrough: ~p\n", [getElementFromBoard(Board, ThroughRight)]),
-  io:format("ThroughLeft: ~p\n", [ThroughRight]),
 
   IsRightJumpWithinBounds = isWithinBounds(ToRight),
   IsThroughRightOpposite = getElementFromBoard(Board, FromRowCol) + getElementFromBoard(Board, ThroughRight) == 3,
   IsFinalRightFieldEmpty = isEmpty(Board, ToRight),
   IsRightLegit = IsRightJumpWithinBounds and IsThroughRightOpposite and IsFinalRightFieldEmpty,
 
+  % Podmianka boarda
+
   if
-    IsLeftLegit -> [FromRowCol, ToLeft] ++ findLegalJumpMove(Board, ToLeft, ForWho);
-    IsRightLegit -> [FromRowCol, ToRight] ++ findLegalJumpMove(Board, ToRight, ForWho);
+    IsLeftLegit -> [FromRowCol, ToLeft] ++ findLegalJumpMove(maps:update(mapPositionToIndex(ToLeft), ForWho, Board), ToLeft, ForWho);
+    IsRightLegit -> [FromRowCol, ToRight] ++ findLegalJumpMove(maps:update(mapPositionToIndex(ToRight), ForWho, Board), ToRight, ForWho);
     true -> []
   end.
 
@@ -135,7 +128,7 @@ getStartingBoard() ->
 getTestBoard() ->
   Board = #{1 => 0, 2 => 1, 3 => 0, 4 => 1, 5 => 0, 6 => 1, 7 => 0, 8 => 1, 9 => 0, 10 => 1,
     11 => 1, 12 => 0, 13 => 1, 14 => 0, 15 => 1, 16 => 0, 17 => 1, 18 => 0, 19 => 1, 20 => 0,
-    21 => 0, 22 => 1, 23 => 0, 24 => 1, 25 => 0, 26 => 1, 27 => 0, 28 => 1, 29 => 0, 30 => 1,
+    21 => 0, 22 => 1, 23 => 0, 24 => 1, 25 => 0, 26 => 0, 27 => 0, 28 => 1, 29 => 0, 30 => 1,
     31 => 1, 32 => 0, 33 => 1, 34 => 0, 35 => 1, 36 => 0, 37 => 1, 38 => 0, 39 => 1, 40 => 0,
     41 => 0, 42 => 0, 43 => 0, 44 => 0, 45 => 0, 46 => 0, 47 => 0, 48 => 0, 49 => 0, 50 => 0,
     51 => 0, 52 => 0, 53 => 1, 54 => 0, 55 => 0, 56 => 0, 57 => 0, 58 => 0, 59 => 0, 60 => 0,
