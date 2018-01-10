@@ -25,17 +25,23 @@ get("/board", _Req, State) ->
   Board = dra:getStartingBoard(),
   Body = dra:getOutputBoard(Board),
   {Body, State}.
-put("/move/:who", _Req, State) ->
+post("/move/:who", _Req, State) ->
   %UpdatedBoard = getMove(Board, White),
   %IOList = getOutputBoard(Board),
-  Who = leptus_req:param(_Req, who),
+  Who = list_to_integer(binary_to_list(leptus_req:param(_Req, who))),
   Body = leptus_req:body_raw(_Req),
   io:format("received a put message with ~p", [Body]),
-  Board = binary_to_list(Body),
-  io:format("~n parsed to a list like: ~p", [Board]),
-  IOList = "ok",
+  ListRaw = binary_to_list(Body),
+  io:format("~n list raw: ~p", [ListRaw]),
+  ParsedList = dra:listFromSpaceSeparatedString(ListRaw),
+  io:format("~n parsed to a list like: ~p", [ParsedList]),
+  ParsedBoard = dra:boardMapFromList(ParsedList),
+  io:format("~n parsed board: ~p", [ParsedBoard]),
+  NextBestBoard = dra:getBestNextBoard(ParsedBoard, Who),
+  io:format("~n next best board: ~p", [NextBestBoard]),
+  IOList = dra:getOutputBoard(NextBestBoard),
+  io:format("~n next best board output: ~p", [IOList]),
   %NewBoard = dra:getRandomMove(Board, Who),
-  %IOList = dra:getOutputBoard(NewBoard),
   {IOList, State}.
 
 terminate(_Reason, _Route, _Req, _State) ->
