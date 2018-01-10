@@ -238,7 +238,10 @@ findAllAvailableMoves(Board, WhoseMove) ->
   end,
  receive
     {jump, JumpList} ->
-      ListOfAllMoves = ListOfSimpleMoves ++ [[jump] ++ X || X <- JumpList]
+      ListOfAllMoves = if
+                         length(JumpList) > 0 -> [[jump] ++ X || X <- JumpList];
+                         true -> ListOfSimpleMoves ++ [[jump] ++ X || X <- JumpList]
+                       end
  end,
  ListOfAllMoves.
 
@@ -376,8 +379,8 @@ isMaximizingPlayer(WhoseMove) -> if WhoseMove == 2 -> true; WhoseMove == 1 -> fa
 %%  lists:nth(1, FilteredBoard).
 
 getBestNextBoard(Board, WhoseMove) ->
-  GameTree = generateGameTree(Board, WhoseMove, 3),
-  #node{children = Children, value = BestValue} = element(2, minimaxOuter(GameTree, 3, isMaximizingPlayer(WhoseMove))),
+  GameTree = generateGameTree(Board, WhoseMove, 4), % Starting depth
+  #node{children = Children, value = BestValue} = element(2, minimaxOuter(GameTree, 4, isMaximizingPlayer(WhoseMove))),
   BestValue.
 
 
