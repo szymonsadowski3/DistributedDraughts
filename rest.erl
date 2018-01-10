@@ -20,24 +20,22 @@ init(_Route, _Req, State) ->
   {ok, State}.
 
 get("/", _Req, State) ->
-  Board = dra:getStartingBoard(),
-  IOList = dra:getOutputBoard(Board),
-  {IOList, State};
+  {<<"Hello, leptus!">>, State};
 get("/board", _Req, State) ->
   Board = dra:getStartingBoard(),
-  IOList = dra:getOutputBoard(Board),
-  {IOList, State};
-get("/move/white", _Req, State) ->
+  Body = dra:getOutputBoard(Board),
+  {Body, State}.
+put("/move/:who", _Req, State) ->
   %UpdatedBoard = getMove(Board, White),
   %IOList = getOutputBoard(Board),
-  Board = dra:getStartingBoard(),
-  IOList = dra:getOutputBoard(Board),
-  {IOList, State};
-get("/move/black", _Req, State) ->
-  %UpdatedBoard = getMove(Board, Black),
-  %IOList = getOutputBoard(Board),
-  Board = dra:getStartingBoard(),
-  IOList = dra:getOutputBoard(Board),
+  Who = leptus_req:param(_Req, who),
+  Body = leptus_req:body_raw(_Req),
+  io:format("received a put message with ~p", [Body]),
+  Board = binary_to_list(Body),
+  io:format("~n parsed to a list like: ~p", [Board]),
+  IOList = "ok",
+  %NewBoard = dra:getRandomMove(Board, Who),
+  %IOList = dra:getOutputBoard(NewBoard),
   {IOList, State}.
 
 terminate(_Reason, _Route, _Req, _State) ->

@@ -1,12 +1,18 @@
 var loc = "http://127.0.0.1:8080/board";
+var sendLoc = "http://127.0.0.1:8080/move/2"
 var COLS = 10;
+
 
 $(document).ready(function() {
   $.get(loc, function(data) {
     var parsed_array = JSON.parse(data);
+    alert("sent a put request");
     updateBoard(parsed_array);
-  });
+
+  $.get(sendLoc, parsed_array);
+  }
 });
+
 
 function updateBoard(board_data) {
   var table = $(".board").find("table")[0];
