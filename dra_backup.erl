@@ -111,7 +111,7 @@ server_start()->
 %% develop
 
 getOutputBoard(Board) ->
-  BoardList = [maps:get(Index, Board) || Index <- lists:seq(1,100)],
+  BoardList = [maps:get(Index, Board) || Index <- lists:seq(0,99)],
   io_lib:format("~w", [BoardList]).
 
 getStartingBoard() ->
