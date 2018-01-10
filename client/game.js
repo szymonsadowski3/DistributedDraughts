@@ -1,29 +1,62 @@
 var loc = "http://127.0.0.1:8080/board";
-var sendLoc = "http://127.0.0.1:8080/move/2"
+var sendLoc = "http://127.0.0.1:8080/move/";
 var COLS = 10;
 
+BOARDSTATE = null;
+WHOSEMOVE = 2;
 
-$(document).ready(function() {
-  $.get(loc, function(data) {
-    var parsed_array = JSON.parse(data);
-    alert("sent a put request");
-    updateBoard(parsed_array);
+function invertMove(move) {
+    if(move==2){
+        return 1;
+    } else {
+        return 2;
+    }
+}
 
-  $.get(sendLoc, parsed_array);
-  }
+function playerVsCpu() {
+    $.get(loc, function (data) {
+        var parsed_array = JSON.parse(data);
+        visualizeBoard(parsed_array);
+
+        $.get(sendLoc + WHOSEMOVE, parsed_array);
+    })
+
+    // To Be Continued
+}
+
+function initBoard() {
+    $.get(loc, function (data) {
+        BOARDSTATE = JSON.parse(data);
+        visualizeBoard();
+    })
+}
+
+$(document).ready(function () {
+    initBoard();
+    $("#nextMove").click(function () {
+        var joinedStr = BOARDSTATE.join(" ");
+
+        $.post(sendLoc + WHOSEMOVE, joinedStr).done(function (data) {
+            BOARDSTATE = JSON.parse(data);
+            WHOSEMOVE = invertMove(WHOSEMOVE);
+            visualizeBoard();
+        });
+    });
 });
 
 
-function updateBoard(board_data) {
-  var table = $(".board").find("table")[0];
+function visualizeBoard() {
+    var table = $(".board").find("table")[0];
 
-  for (var i = 0; i < COLS; ++i) {
-    for (var j = 0; j < COLS; ++j) {
-      if (board_data[i * COLS + j] == 1) {
-        table.rows[i].children[j].innerHTML = '<div class="white_piece"></div>';
-      } else if (board_data[i * COLS + j] == 2) {
-        table.rows[i].children[j].innerHTML = '<div class="black_piece"></div>';
-      }
+    for (var i = 0; i < COLS; ++i) {
+        for (var j = 0; j < COLS; ++j) {
+            if (BOARDSTATE[i * COLS + j] == 0) {
+                table.rows[i].children[j].innerHTML = '';
+            } else if (BOARDSTATE[i * COLS + j] == 1) {
+                table.rows[i].children[j].innerHTML = '<div class="white_piece"></div>';
+            } else if (BOARDSTATE[i * COLS + j] == 2) {
+                table.rows[i].children[j].innerHTML = '<div class="black_piece"></div>';
+            }
+        }
     }
-  }
 }

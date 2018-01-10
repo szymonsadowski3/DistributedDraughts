@@ -36,10 +36,12 @@ post("/move/:who", _Req, State) ->
   ParsedList = dra:listFromSpaceSeparatedString(ListRaw),
   io:format("~n parsed to a list like: ~p", [ParsedList]),
   ParsedBoard = dra:boardMapFromList(ParsedList),
+  dra:printBoard(ParsedBoard),
   io:format("~n parsed board: ~p", [ParsedBoard]),
   NextBestBoard = dra:getBestNextBoard(ParsedBoard, Who),
   io:format("~n next best board: ~p", [NextBestBoard]),
-  IOList = dra:getOutputBoard(NextBestBoard),
+  dra:printBoard(NextBestBoard),
+  IOList = list_to_binary(dra:getOutputBoard(NextBestBoard)),
   io:format("~n next best board output: ~p", [IOList]),
   %NewBoard = dra:getRandomMove(Board, Who),
   {IOList, State}.
