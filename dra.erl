@@ -172,7 +172,7 @@ findSimpleMovesForOnePiece(Board, FromRowCol, WhoseMove) ->
   Result = [[FromRowCol, Pos] || Pos <- ListOfPosLeftAndRight, isWithinBounds(Pos) andalso isEmpty(Board, Pos)],
   Result.
 
-findLegalJumpMovesForOnePieceDuplicates(Board, FromRowCol, WhoseMove) ->
+findLegalJumpMovesForOnePieceDuplicates(Board, FromRowCol, WhoseMove, ParentPID) ->
   Sign = (if WhoseMove == 1 -> 1; true -> -1 end), % 1 for white, -1 for black
 
   {Row, Col} = FromRowCol,
@@ -181,8 +181,7 @@ findLegalJumpMovesForOnePieceDuplicates(Board, FromRowCol, WhoseMove) ->
 
   FromValue = getElementFromBoard(Board, FromRowCol),
 
-  IsLeftJumpWithinBounds = isWithinBounds(ToLeft),
-  IsLeftLegit = IsLeftJumpWithinBounds andalso isEmpty(Board, ToLeft) andalso
+  IsLeftLegit = isWithinBounds(ToLeft) andalso isEmpty(Board, ToLeft) andalso
     (FromValue + getElementFromBoard(Board, ThroughLeft) == 3), % is "ThroughLeft" element of an opposite value
   % e.g. from = white and through = black
   ThroughRight = {Row + Sign * 1, Col + 1},
@@ -190,43 +189,58 @@ findLegalJumpMovesForOnePieceDuplicates(Board, FromRowCol, WhoseMove) ->
 
   IsRightLegit = isWithinBounds(ToRight) andalso isEmpty(Board, ToRight) andalso
     (FromValue + getElementFromBoard(Board, ThroughRight) == 3),  % is "Through" element of an opposite
-
-  if
+if
     IsLeftLegit ->
-      [FromRowCol, ThroughLeft, ToLeft] ++ findLegalJumpMovesForOnePieceDuplicates(
-        maps:update(mapPositionToIndex(ToLeft), WhoseMove, Board), ToLeft, WhoseMove);
+      LeftBoard = maps:update(mapPositionToIndex(ToLeft), WhoseMove, Board),
+      LeftJumps = [FromRowCol, ThroughLeft, ToLeft]
+      ++ findLegalJumpMovesForOnePiece(LeftBoard, ToLeft, WhoseMove);
+    true ->
+      LeftJumps = []
+end,
+if
     IsRightLegit ->
-      [FromRowCol, ThroughRight, ToRight] ++ findLegalJumpMovesForOnePieceDuplicates(
-        maps:update(mapPositionToIndex(ToRight), WhoseMove, Board), ToRight, WhoseMove);
-    true -> []
-  end.
+      RightBoard = maps:update(mapPositionToIndex(ToRight), WhoseMove, Board),
+      RightJumps = [FromRowCol, ThroughRight, ToRight] ++ findLegalJumpMovesForOnePiece(RightBoard, ToRight, WhoseMove);
+    true ->
+      RightJumps = []
+end,
+List = LeftJumps ++ RightJumps,
+ParentPID ! {self(), LeftJumps ++ RightJumps}.
 
 findLegalJumpMovesForOnePiece(Board, FromRowCol, WhoseMove) ->
-  remove_dups(findLegalJumpMovesForOnePieceDuplicates(Board, FromRowCol, WhoseMove)).
+  PID = spawn(dra, findLegalJumpMovesForOnePieceDuplicates, [Board, FromRowCol, WhoseMove, self()]),
+  receive
+    {PID, List} ->
+      List
+  end.
 
-findAllSimpleMoves(Board, WhoseMove) ->
+findAllSimpleMoves(Board, WhoseMove, SendPID) ->
   ListOfPieces = getAllPlayerPiecesLocationsOnBoard(Board, WhoseMove),
   ListOfMoves = [findSimpleMovesForOnePiece(Board, FromRowCol, WhoseMove) || FromRowCol <- ListOfPieces],
   ListOfNonEmptyMoves = [Move || Move <- ListOfMoves, Move /= []],
   ListOfNonEmptyMovesFlat = [lists:nth(1, Elem) || Elem <- ListOfNonEmptyMoves],
-  ListOfNonEmptyMovesFlat.
+  SendPID ! {simple, ListOfNonEmptyMovesFlat}.
 
-findAllJumpMoves(Board, WhoseMove) ->
+findAllJumpMoves(Board, WhoseMove, SendPID) ->
   ListOfPieces = getAllPlayerPiecesLocationsOnBoard(Board, WhoseMove),
   ListOfMoves = [findLegalJumpMovesForOnePiece(Board, FromRowCol, WhoseMove) || FromRowCol <- ListOfPieces],
   ListOfNonEmptyMoves = [Move || Move <- ListOfMoves, Move /= []],
-  ListOfNonEmptyMoves.
+  SendPID ! {jump, ListOfNonEmptyMoves}.
 
 findAllAvailableMoves(Board, WhoseMove) ->
-  SimpleMoves = findAllSimpleMoves(Board, WhoseMove),
-  SimpleMovesTagged = [[simple] ++ X || X <- SimpleMoves],
-  JumpMoves = findAllJumpMoves(Board, WhoseMove),
-  JumpMovesTagged = [[jump] ++ X || X <- JumpMoves],
-  if
-    length(JumpMovesTagged) > 0 -> JumpMovesTagged;
-    true -> SimpleMovesTagged ++ JumpMovesTagged
-  end.
-%%  SimpleMovesTagged ++ JumpMovesTagged.
+  spawn(dra, findAllSimpleMoves, [Board, WhoseMove, self()]),
+  spawn(dra, findAllJumpMoves, [Board, WhoseMove, self()]),
+
+  ListOfMoves = [],
+  receive
+    {simple, SimpleList} ->
+      ListOfSimpleMoves = ListOfMoves ++ [[simple] ++ X || X <- SimpleList]
+  end,
+ receive
+    {jump, JumpList} ->
+      ListOfAllMoves = ListOfSimpleMoves ++ [[jump] ++ X || X <- JumpList]
+ end,
+ ListOfAllMoves.
 
 %% ------ END OF FINDING MOVES ------
 
