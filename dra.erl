@@ -17,6 +17,10 @@ getOutputBoard(Board) ->
   BoardList = [maps:get(Index, Board) || Index <- lists:seq(0,99)],
   io_lib:format("~w", [BoardList]).
 
+getOutputBoards(Boards) ->
+  ListOfOutputBoards = [getOutputBoard(Board) || Board <- Boards],
+  lists:join("|", ListOfOutputBoards).
+
 getStartingBoard() -> #{0 => 0, 1 => 1, 2 => 0, 3 => 1, 4 => 0, 5 => 1, 6 => 0, 7 => 1, 8 => 0, 9 => 1,
   10 => 1, 11 => 0, 12 => 1, 13 => 0, 14 => 1, 15 => 0, 16 => 1, 17 => 0, 18 => 1, 19 => 0,
   20 => 0, 21 => 1, 22 => 0, 23 => 1, 24 => 0, 25 => 1, 26 => 0, 27 => 1, 28 => 0, 29 => 1,
@@ -352,15 +356,27 @@ mainer() ->
 %%  Result = getAllPossibleBoards(getTestBoard(), 2),
 %%  Result = generateGameTree(getTestBoard(), 2, 3),
 %%  Res = minimax(Result, 3, true),
+  Res = getOutputBoards(gameScenarioBoards),
   gameScenario().
 %%  Res = getBestNextBoard(getTestBoard(), 2),
 %%  printBoards(Res).
 
-gameScenario() -> gameScenario(20, getStartingBoard(), 2).
+%% ------ SCENARIOS ------
+
+gameScenario() -> gameScenario(70, getStartingBoard(), 2).
 
 gameScenario(0, Board, WhoseMove) -> ok;
 gameScenario(NumOfMoves, Board, WhoseMove) ->
   printBoard(Board),
-  io:format("~n", []),
+  io:format("~p~n", [NumOfMoves]),
   NextBoard = getBestNextBoard(Board, WhoseMove),
   gameScenario(NumOfMoves - 1, NextBoard, invertWhoseMove(WhoseMove)).
+
+gameScenarioBoards() -> gameScenarioBoards(70, getStartingBoard(), 2).
+gameScenarioBoards(0, Board, WhoseMove) -> [];
+gameScenarioBoards(NumOfMoves, Board, WhoseMove) ->
+  NextBoard = getBestNextBoard(Board, WhoseMove),
+  [NextBoard] ++ gameScenarioBoards(NumOfMoves - 1, NextBoard, invertWhoseMove(WhoseMove)).
+
+listFromSpaceSeparatedString(Str) -> [begin {Int,_}=string:to_integer(Token), Int end|| Token<-string:tokens(Str," ")].
+boardMapFromList(Lista) -> maps:from_list(lists:zip(Lista, lists:seq(0, length(Lista)))).
