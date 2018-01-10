@@ -356,7 +356,7 @@ mainer() ->
 %%  Result = getAllPossibleBoards(getTestBoard(), 2),
 %%  Result = generateGameTree(getTestBoard(), 2, 3),
 %%  Res = minimax(Result, 3, true),
-  Res = getOutputBoards(gameScenarioBoards),
+  Res = getOutputBoards(gameScenarioBoards()),
   gameScenario().
 %%  Res = getBestNextBoard(getTestBoard(), 2),
 %%  printBoards(Res).
@@ -379,4 +379,4 @@ gameScenarioBoards(NumOfMoves, Board, WhoseMove) ->
   [NextBoard] ++ gameScenarioBoards(NumOfMoves - 1, NextBoard, invertWhoseMove(WhoseMove)).
 
 listFromSpaceSeparatedString(Str) -> [begin {Int,_}=string:to_integer(Token), Int end|| Token<-string:tokens(Str," ")].
-boardMapFromList(Lista) -> maps:from_list(lists:zip(Lista, lists:seq(0, length(Lista)))).
+boardMapFromList(Lista) -> maps:from_list(lists:zip(lists:seq(0, length(Lista) - 1), Lista)).
