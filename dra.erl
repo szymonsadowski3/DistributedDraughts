@@ -36,16 +36,16 @@ getStartingBoard() -> #{0 => 0, 1 => 1, 2 => 0, 3 => 1, 4 => 0, 5 => 1, 6 => 0, 
   90 => 2, 91 => 0, 92 => 2, 93 => 0, 94 => 2, 95 => 0, 96 => 2, 97 => 0, 98 => 2, 99 => 0
 }.
 
-getTestBoard() -> #{0 => 0, 1 => 1, 2 => 2, 3 => 1, 4 => 0, 5 => 0, 6 => 0, 7 => 1, 8 => 0, 9 => 1,
-  10 => 1, 11 => 0, 12 => 1, 13 => 0, 14 => 1, 15 => 0, 16 => 1, 17 => 0, 18 => 1, 19 => 0,
-  20 => 0, 21 => 1, 22 => 0, 23 => 0, 24 => 0, 25 => 0, 26 => 0, 27 => 1, 28 => 0, 29 => 1,
-  30 => 1, 31 => 0, 32 => 1, 33 => 0, 34 => 1, 35 => 0, 36 => 1, 37 => 0, 38 => 1, 39 => 0,
-  40 => 0, 41 => 0, 42 => 0, 43 => 0, 44 => 0, 45 => 0, 46 => 0, 47 => 0, 48 => 0, 49 => 0,
-  50 => 0, 51 => 0, 52 => 1, 53 => 0, 54 => 0, 55 => 0, 56 => 0, 57 => 0, 58 => 0, 59 => 0,
-  60 => 0, 61 => 4, 62 => 0, 63 => 2, 64 => 0, 65 => 2, 66 => 0, 67 => 2, 68 => 0, 69 => 2,
-  70 => 2, 71 => 0, 72 => 2, 73 => 0, 74 => 2, 75 => 0, 76 => 2, 77 => 0, 78 => 2, 79 => 0,
-  80 => 0, 81 => 2, 82 => 0, 83 => 2, 84 => 0, 85 => 2, 86 => 0, 87 => 2, 88 => 0, 89 => 2,
-  90 => 2, 91 => 0, 92 => 2, 93 => 0, 94 => 2, 95 => 1, 96 => 2, 97 => 0, 98 => 2, 99 => 0
+getTestBoard() -> #{0 => 0, 1 => 3, 2 => 2, 3 => 1, 4 => 0, 5 => 0, 6 => 0, 7 => 1, 8 => 0, 9 => 1,
+  10 => 1, 11 => 0, 12 => 2, 13 => 0, 14 => 1, 15 => 0, 16 => 1, 17 => 0, 18 => 1, 19 => 0,
+  20 => 0, 21 => 0, 22 => 0, 23 => 0, 24 => 0, 25 => 1, 26 => 0, 27 => 1, 28 => 0, 29 => 1,
+  30 => 0, 31 => 0, 32 => 1, 33 => 0, 34 => 1, 35 => 2, 36 => 1, 37 => 0, 38 => 1, 39 => 0,
+  40 => 0, 41 => 0, 42 => 0, 43 => 0, 44 => 3, 45 => 0, 46 => 0, 47 => 0, 48 => 0, 49 => 0,
+  50 => 0, 51 => 0, 52 => 0, 53 => 0, 54 => 0, 55 => 0, 56 => 0, 57 => 0, 58 => 0, 59 => 0,
+  60 => 0, 61 => 4, 62 => 0, 63 => 0, 64 => 0, 65 => 2, 66 => 0, 67 => 2, 68 => 0, 69 => 2,
+  70 => 0, 71 => 0, 72 => 2, 73 => 0, 74 => 0, 75 => 0, 76 => 2, 77 => 0, 78 => 2, 79 => 0,
+  80 => 0, 81 => 0, 82 => 0, 83 => 2, 84 => 0, 85 => 2, 86 => 0, 87 => 2, 88 => 0, 89 => 2,
+  90 => 2, 91 => 0, 92 => 0, 93 => 0, 94 => 2, 95 => 1, 96 => 0, 97 => 0, 98 => 2, 99 => 0
 }.
 
 %% ------ END OF INIT VALUE PROVIDERS ------
@@ -137,6 +137,23 @@ clearAllPositionsButLast(Board, WhoseMove, [Position | ListOfPositions]) ->
       clearAllPositionsButLast(NewBoard, WhoseMove, ListOfPositions)
   end.
 
+clearAllPositionsButLastKingMove(Board, _, []) ->
+  Board;
+
+clearAllPositionsButLastKingMove(Board, WhoseMove, [Position, NextPosition | ListOfPositions]) ->
+  case ListOfPositions of
+    [] ->
+      MiddlePos = checkIfDoubleMove(Position, NextPosition),
+      NewBoard = emptyPositionOnBoard(Board, Position),
+      NewBoard2 = emptyPositionOnBoard(NewBoard, MiddlePos),
+      fillPositionOnBoard(NewBoard2, NextPosition, WhoseMove);
+    _ ->
+      MiddlePos = checkIfDoubleMove(Position, NextPosition),
+      NewBoard = emptyPositionOnBoard(Board, MiddlePos),
+      NewBoard2 = emptyPositionOnBoard(NewBoard, Position),
+      clearAllPositionsButLast(NewBoard2, WhoseMove, [NextPosition | ListOfPositions])
+  end.
+
 promoteToKing(Board) ->
   ListOfBlackLocations = getAllPlayerPiecesLocationsOnBoard(Board, 2),
   ListOfWhiteLocations = getAllPlayerPiecesLocationsOnBoard(Board, 1),
@@ -154,9 +171,25 @@ promoteToKing(Board) ->
       Board
   end.
 
-getBoardAfterMove(Board, WhoseMove, [_ | ListOfPositions]) ->
-  UpdatedBoard = clearAllPositionsButLast(Board, WhoseMove, ListOfPositions),
+getBoardAfterMove(Board, WhoseMove, [MoveType | ListOfPositions]) ->
+  if
+    MoveType == king ->
+      UpdatedBoard = clearAllPositionsButLastKingMove(Board, WhoseMove+2, ListOfPositions);
+    true ->
+      UpdatedBoard = clearAllPositionsButLast(Board, WhoseMove, ListOfPositions)
+  end,
   UpdatedBoard.
+
+checkIfDoubleMove({R1,C1},{R2,C2}) ->
+  if
+    (R1+R2) rem 2 == 0 andalso (C1+C2) rem 2 == 0 ->
+      {(R1+R2) div 2,(C1+C2) div 2};
+    true ->
+      {-1, -1}
+  end.
+
+emptyPositionOnBoard(Board, {-1,-1}) ->
+  Board;
 
 emptyPositionOnBoard(Board, From) ->
   Index = mapPositionToIndex(From),
@@ -194,83 +227,201 @@ getAllTopLeftMoves(Board, FromRowCol, WhoseMove) ->
   Sign = (if WhoseMove == 3 -> 1; true -> -1 end),
   {Row, Col} = FromRowCol,
 
-  ThroughTopLeft = {Row + Sign * 1, Col - 1},
+  Through = {Row - Sign * 1, Col - 1},
+  To = {Row - Sign * 2, Col - 2},
 
-  FromValue = getElementFromBoard(Board, FromRowCol),
 
-  IsLegit = isWithinBounds(ThroughTopLeft) andalso
-    FromValue-2 /= getElementFromBoard(Board, ThroughTopLeft),
+      FromValue = getElementFromBoard(Board, FromRowCol),
 
-  if
-    IsLegit ->
-      TopLeftBoard = maps:update(mapPositionToIndex(ThroughTopLeft), WhoseMove, Board),
-      [FromRowCol, ThroughTopLeft] ++ getAllTopLeftMoves(TopLeftBoard, ThroughTopLeft, WhoseMove);
-    true ->
-      []
-  end.
+      IsLegit = isWithinBounds(Through) andalso
+        FromValue-2 /= getElementFromBoard(Board, Through),
+      IsToLegit = isWithinBounds(To) andalso
+        FromValue-2 /= getElementFromBoard(Board, To),
+
+                if
+                  IsLegit ->
+                    ThroughValue = getElementFromBoard(Board, Through),
+
+                    if
+                      IsToLegit ->
+                        ToValue = getElementFromBoard(Board, To),
+
+                          if
+                            ThroughValue == 0 andalso ToValue == 0 ->
+                              NewBoard = maps:update(mapPositionToIndex(To), WhoseMove, Board),
+                              remove_dups([FromRowCol, Through, To] ++ getAllTopLeftMoves(NewBoard, To, WhoseMove));
+                            ToValue == 0 ->
+                              ClearBoard = emptyPositionOnBoard(Board, Through),
+                              NewBoard = maps:update(mapPositionToIndex(To), WhoseMove, ClearBoard),
+                              remove_dups([FromRowCol, To] ++ getAllTopLeftMoves(NewBoard, To, WhoseMove));
+                            ToValue /= 0 andalso ThroughValue == 0 ->
+                              NewBoard = maps:update(mapPositionToIndex(Through), WhoseMove, Board),
+                              remove_dups([FromRowCol, Through] ++ getAllTopLeftMoves(NewBoard, Through, WhoseMove));
+                            true ->
+                              []
+                          end;
+                      ThroughValue /= 0 ->
+                        [];
+                      true ->
+                        [FromRowCol, Through]
+                    end;
+                  true ->
+                    []
+                end.
 
 getAllBottomLeftMoves(Board, FromRowCol, WhoseMove) ->
   Sign = (if WhoseMove == 3 -> 1; true -> -1 end),
   {Row, Col} = FromRowCol,
 
-  ThroughBottomLeft = {Row - Sign * 1, Col - 1},
+  Through = {Row + Sign * 1, Col - 1},
+  To = {Row + Sign * 2, Col - 2},
 
-  FromValue = getElementFromBoard(Board, FromRowCol),
 
-  IsLegit = isWithinBounds(ThroughBottomLeft) andalso
-    FromValue-2 /= getElementFromBoard(Board, ThroughBottomLeft),
+      FromValue = getElementFromBoard(Board, FromRowCol),
 
-  if
-    IsLegit ->
-      BottomLeftBoard = maps:update(mapPositionToIndex(ThroughBottomLeft), WhoseMove, Board),
-      [FromRowCol, ThroughBottomLeft] ++ getAllBottomLeftMoves(BottomLeftBoard, ThroughBottomLeft, WhoseMove);
-    true ->
-      []
-  end.
+      IsLegit = isWithinBounds(Through) andalso
+        FromValue-2 /= getElementFromBoard(Board, Through),
+      IsToLegit = isWithinBounds(To) andalso
+        FromValue-2 /= getElementFromBoard(Board, To),
+
+                if
+                  IsLegit ->
+                    ThroughValue = getElementFromBoard(Board, Through),
+
+                    if
+                      IsToLegit ->
+                        ToValue = getElementFromBoard(Board, To),
+
+                          if
+                            ThroughValue == 0 andalso ToValue == 0 ->
+                              NewBoard = maps:update(mapPositionToIndex(To), WhoseMove, Board),
+                              remove_dups([FromRowCol, Through, To] ++ getAllTopLeftMoves(NewBoard, To, WhoseMove));
+                            ToValue == 0 ->
+                              ClearBoard = emptyPositionOnBoard(Board, Through),
+                              NewBoard = maps:update(mapPositionToIndex(To), WhoseMove, ClearBoard),
+                              remove_dups([FromRowCol, To] ++ getAllBottomLeftMoves(NewBoard, To, WhoseMove));
+                            ToValue /= 0 andalso ThroughValue == 0 ->
+                              NewBoard = maps:update(mapPositionToIndex(Through), WhoseMove, Board),
+                              remove_dups([FromRowCol, Through] ++ getAllBottomLeftMoves(NewBoard, Through, WhoseMove));
+                            true ->
+                              []
+                          end;
+                      ThroughValue /= 0 ->
+                        [];
+                      true ->
+                        [FromRowCol, Through]
+                    end;
+                  true ->
+                    []
+                end.
 
 getAllBottomRightMoves(Board, FromRowCol, WhoseMove) ->
   Sign = (if WhoseMove == 3 -> 1; true -> -1 end),
   {Row, Col} = FromRowCol,
 
-  ThroughBottomRight =  {Row - Sign * 1, Col + 1},
+  Through =  {Row + Sign * 1, Col + 1},
+  To = {Row + Sign * 2, Col + 2},
 
-  FromValue = getElementFromBoard(Board, FromRowCol),
 
-  IsLegit = isWithinBounds(ThroughBottomRight) andalso
-    FromValue-2 /= getElementFromBoard(Board, ThroughBottomRight),
+      FromValue = getElementFromBoard(Board, FromRowCol),
 
-  if
-    IsLegit ->
-      BottomRightBoard = maps:update(mapPositionToIndex(ThroughBottomRight), WhoseMove, Board),
-      [FromRowCol, ThroughBottomRight] ++ getAllBottomRightMoves(BottomRightBoard, ThroughBottomRight, WhoseMove);
-    true ->
-      []
-  end.
+      IsLegit = isWithinBounds(Through) andalso
+        FromValue-2 /= getElementFromBoard(Board, Through),
+      IsToLegit = isWithinBounds(To) andalso
+        FromValue-2 /= getElementFromBoard(Board, To),
+
+                if
+                  IsLegit ->
+                    ThroughValue = getElementFromBoard(Board, Through),
+
+                    if
+                      IsToLegit ->
+                        ToValue = getElementFromBoard(Board, To),
+
+                          if
+                            ThroughValue == 0 andalso ToValue == 0 ->
+                              NewBoard = maps:update(mapPositionToIndex(To), WhoseMove, Board),
+                              remove_dups([FromRowCol, Through, To] ++ getAllTopLeftMoves(NewBoard, To, WhoseMove));
+                            ToValue == 0 ->
+                              ClearBoard = emptyPositionOnBoard(Board, Through),
+                              NewBoard = maps:update(mapPositionToIndex(To), WhoseMove, ClearBoard),
+                              remove_dups([FromRowCol, To] ++ getAllBottomRightMoves(NewBoard, To, WhoseMove));
+                            ToValue /= 0 andalso ThroughValue == 0 ->
+                              NewBoard = maps:update(mapPositionToIndex(Through), WhoseMove, Board),
+                              remove_dups([FromRowCol, Through] ++ getAllBottomRightMoves(NewBoard, Through, WhoseMove));
+                            true ->
+                              []
+                          end;
+                      ThroughValue /= 0 ->
+                        [];
+                      true ->
+                        [FromRowCol, Through]
+                    end;
+                  true ->
+                    []
+                end.
 
 getAllTopRightMoves(Board, FromRowCol, WhoseMove) ->
   Sign = (if WhoseMove == 3 -> 1; true -> -1 end),
   {Row, Col} = FromRowCol,
 
-  ThroughTopRight =  {Row + Sign * 1, Col + 1},
+  Through =  {Row - Sign * 1, Col + 1},
+  To = {Row - Sign * 2, Col + 2},
 
-  FromValue = getElementFromBoard(Board, FromRowCol),
 
-  IsLegit = isWithinBounds(ThroughTopRight) andalso
-    FromValue-2 /= getElementFromBoard(Board, ThroughTopRight),
+    FromValue = getElementFromBoard(Board, FromRowCol),
 
+    IsLegit = isWithinBounds(Through) andalso
+      FromValue-2 /= getElementFromBoard(Board, Through),
+    IsToLegit = isWithinBounds(To) andalso
+      FromValue-2 /= getElementFromBoard(Board, To),
+
+              if
+                IsLegit ->
+                  ThroughValue = getElementFromBoard(Board, Through),
+
+                  if
+                    IsToLegit ->
+                      ToValue = getElementFromBoard(Board, To),
+
+                        if
+                          ThroughValue == 0 andalso ToValue == 0 ->
+                            NewBoard = maps:update(mapPositionToIndex(To), WhoseMove, Board),
+                            remove_dups([FromRowCol, Through, To] ++ getAllTopLeftMoves(NewBoard, To, WhoseMove));
+                          ToValue == 0 ->
+                            ClearBoard = emptyPositionOnBoard(Board, Through),
+                            NewBoard = maps:update(mapPositionToIndex(To), WhoseMove, ClearBoard),
+                            remove_dups([FromRowCol, To] ++ getAllTopRightMoves(NewBoard, To, WhoseMove));
+                          ToValue /= 0 andalso ThroughValue == 0 ->
+                            NewBoard = maps:update(mapPositionToIndex(Through), WhoseMove, Board),
+                            remove_dups([FromRowCol, Through] ++ getAllTopRightMoves(NewBoard, Through, WhoseMove));
+                          true ->
+                            []
+                        end;
+                    ThroughValue /= 0 ->
+                      [];
+                    true ->
+                      [FromRowCol, Through]
+                  end;
+                true ->
+                  []
+              end.
+
+getAllMovesWithin(MovesList) ->
+  Len = length(MovesList),
   if
-    IsLegit ->
-      TopRightBoard = maps:update(mapPositionToIndex(ThroughTopRight), WhoseMove, Board),
-      [FromRowCol, ThroughTopRight] ++ getAllTopRightMoves(TopRightBoard, ThroughTopRight, WhoseMove);
+    Len == 0 ->
+      Moves = [];
     true ->
-      []
-  end.
+      Moves = [lists:sublist(MovesList, Index) || Index <- lists:seq(2, Len)]
+  end,
+  Moves.
 
 findLegalKingMovesForOnePiece(Board, FromRowCol, WhoseMove) ->
-  [remove_dups(getAllTopLeftMoves(Board, FromRowCol, WhoseMove)),
-  remove_dups(getAllBottomLeftMoves(Board,FromRowCol, WhoseMove)),
-  remove_dups(getAllTopRightMoves(Board,FromRowCol, WhoseMove)),
-  remove_dups(getAllBottomRightMoves(Board,FromRowCol, WhoseMove))].
+  getAllMovesWithin(getAllTopLeftMoves(Board, FromRowCol, WhoseMove)) ++
+  getAllMovesWithin(getAllBottomLeftMoves(Board,FromRowCol, WhoseMove)) ++
+  getAllMovesWithin(getAllTopRightMoves(Board,FromRowCol, WhoseMove)) ++
+  getAllMovesWithin(getAllBottomRightMoves(Board,FromRowCol, WhoseMove)).
 
 findLegalJumpMovesForOnePieceDuplicates(Board, FromRowCol, WhoseMove, ParentPID) ->
   Sign = (if WhoseMove == 1 -> 1; true -> -1 end), % 1 for white, -1 for black
@@ -335,7 +486,7 @@ findAllKingMoves(Board, WhoseMove, SendPID) ->
     true ->
       ListOfMoves = [findLegalKingMovesForOnePiece(Board, FromRowCol, WhoseMove) || FromRowCol <- ListOfPieces],
       ListOfMovesFlat = lists:nth(1, ListOfMoves),
-      KingMoves = [[king] ++ Move || Move <- ListOfMovesFlat, Move /= []]
+      KingMoves = [Move || Move <- ListOfMovesFlat, Move /= []]
   end,
   SendPID ! {king, KingMoves}.
 
@@ -358,9 +509,8 @@ findAllAvailableMoves(Board, WhoseMove) ->
  end,
  receive
    {king, KingList} ->
-      KingMoves = [[king] ++ X || X <- KingList]
-  end,
- ListOfAllMoves = ListOfJumpAndSimpleMoves ++ KingMoves,
+      ListOfAllMoves = ListOfJumpAndSimpleMoves ++ [[king] ++ X || X <- KingList]
+ end,
  ListOfAllMoves.
 
 %% ------ END OF FINDING MOVES ------
