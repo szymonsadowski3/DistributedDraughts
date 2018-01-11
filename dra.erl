@@ -196,10 +196,9 @@ getAllTopLeftMoves(Board, FromRowCol, WhoseMove) ->
   ThroughTopLeft = {Row + Sign * 1, Col - 1},
 
   FromValue = getElementFromBoard(Board, FromRowCol),
-  ThroughValue = getElementFromBoard(Board, ThroughTopLeft),
 
   IsLegit = isWithinBounds(ThroughTopLeft) andalso
-    FromValue-2 /= ThroughValue,
+    FromValue-2 /= getElementFromBoard(Board, ThroughTopLeft),
 
   if
     IsLegit ->
@@ -216,10 +215,9 @@ getAllBottomLeftMoves(Board, FromRowCol, WhoseMove) ->
   ThroughBottomLeft = {Row - Sign * 1, Col - 1},
 
   FromValue = getElementFromBoard(Board, FromRowCol),
-  ThroughValue = getElementFromBoard(Board, ThroughBottomLeft),
 
   IsLegit = isWithinBounds(ThroughBottomLeft) andalso
-    FromValue-2 /= ThroughValue,
+    FromValue-2 /= getElementFromBoard(Board, ThroughBottomLeft),
 
   if
     IsLegit ->
@@ -236,10 +234,9 @@ getAllBottomRightMoves(Board, FromRowCol, WhoseMove) ->
   ThroughBottomRight =  {Row - Sign * 1, Col + 1},
 
   FromValue = getElementFromBoard(Board, FromRowCol),
-  ThroughValue = getElementFromBoard(Board, ThroughBottomRight),
 
   IsLegit = isWithinBounds(ThroughBottomRight) andalso
-    FromValue-2 /= ThroughValue,
+    FromValue-2 /= getElementFromBoard(Board, ThroughBottomRight),
 
   if
     IsLegit ->
@@ -256,10 +253,9 @@ getAllTopRightMoves(Board, FromRowCol, WhoseMove) ->
   ThroughTopRight =  {Row + Sign * 1, Col + 1},
 
   FromValue = getElementFromBoard(Board, FromRowCol),
-  ThroughValue = getElementFromBoard(Board, ThroughTopRight),
 
   IsLegit = isWithinBounds(ThroughTopRight) andalso
-    FromValue-2 /= ThroughValue,
+    FromValue-2 /= getElementFromBoard(Board, ThroughTopRight),
 
   if
     IsLegit ->
@@ -330,20 +326,22 @@ findAllJumpMoves(Board, WhoseMove, SendPID) ->
   ListOfNonEmptyMoves = [Move || Move <- ListOfMoves, Move /= []],
   SendPID ! {jump, ListOfNonEmptyMoves}.
 
-findAllKingMoves(Board, WhoseMove) ->
+findAllKingMoves(Board, WhoseMove, SendPID) ->
   ListOfPieces = getAllPlayerPiecesLocationsOnBoard(Board, WhoseMove),
-  ListOfMoves = [findLegalKingMovesForOnePiece(Board, FromRowCol, WhoseMove) || FromRowCol <- ListOfPieces],
-  ListOfMovesFlat = lists:nth(1, ListOfMoves),
-  ListOfNonEmptyMoves = [[king] ++ Move || Move <- ListOfMovesFlat, Move /= []].
+  if
+    ListOfPieces == [] ->
+      KingMoves = [];
+    true ->
+      ListOfMoves = [findLegalKingMovesForOnePiece(Board, FromRowCol, WhoseMove) || FromRowCol <- ListOfPieces],
+      ListOfMovesFlat = lists:nth(1, ListOfMoves),
+      KingMoves = [[king] ++ Move || Move <- ListOfMovesFlat, Move /= []]
+  end,
+  SendPID ! {king, KingMoves}.
 
 findAllAvailableMoves(Board, WhoseMove) ->
-  if
-    WhoseMove>2 ->
-       findAllKingMoves(Board, WhoseMove);
-    true ->
+       spawn(dra, findAllKingMoves, [Board, WhoseMove+2, self()]),
        spawn(dra, findAllSimpleMoves, [Board, WhoseMove, self()]),
-       spawn(dra, findAllJumpMoves, [Board, WhoseMove, self()])
-  end,
+       spawn(dra, findAllJumpMoves, [Board, WhoseMove, self()]),
 
   ListOfMoves = [],
   receive
@@ -352,12 +350,16 @@ findAllAvailableMoves(Board, WhoseMove) ->
   end,
  receive
     {jump, JumpList} ->
-      ListOfAllMoves = if
+      ListOfJumpAndSimpleMoves = if
                          length(JumpList) > 0 -> [[jump] ++ X || X <- JumpList];
                          true -> ListOfSimpleMoves ++ [[jump] ++ X || X <- JumpList]
                        end
  end,
- ListOfAllMoves.
+ receive
+   {king, KingList} ->
+      KingMoves = [[king] ++ X || X <- KingList]
+  end,
+ ListOfAllMoves = ListOfJumpAndSimpleMoves ++ KingMoves.
 
 %% ------ END OF FINDING MOVES ------
 
