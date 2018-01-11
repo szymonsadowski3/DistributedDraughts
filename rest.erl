@@ -3,6 +3,8 @@
 -compile({parse_transform, leptus_pt}).
 -compile(export_all).
 
+-include("treeNode.hrl").
+
 %% DICTIONARY
 
 %% 0: empty
@@ -30,21 +32,16 @@ post("/move/:who", _Req, State) ->
   %IOList = getOutputBoard(Board),
   Who = list_to_integer(binary_to_list(leptus_req:param(_Req, who))),
   Body = leptus_req:body_raw(_Req),
-  io:format("received a put message with ~p", [Body]),
   ListRaw = binary_to_list(Body),
-  io:format("~n list raw: ~p", [ListRaw]),
   ParsedList = dra:listFromSpaceSeparatedString(ListRaw),
-  io:format("~n parsed to a list like: ~p", [ParsedList]),
   ParsedBoard = dra:boardMapFromList(ParsedList),
-  dra:printBoard(ParsedBoard),
-  io:format("~n parsed board: ~p", [ParsedBoard]),
   NextBestBoard = dra:getBestNextBoard(ParsedBoard, Who),
-  io:format("~n next best board: ~p", [NextBestBoard]),
-  dra:printBoard(NextBestBoard),
-  IOList = list_to_binary(dra:getOutputBoard(NextBestBoard)),
-  io:format("~n next best board output: ~p", [IOList]),
+  Output = if
+             NextBestBoard == #{} -> <<"end_of_game">>;
+             true -> list_to_binary(dra:getOutputBoard(NextBestBoard))
+           end,
   %NewBoard = dra:getRandomMove(Board, Who),
-  {IOList, State}.
+  {Output, State}.
 
 terminate(_Reason, _Route, _Req, _State) ->
   ok.

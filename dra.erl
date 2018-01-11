@@ -12,6 +12,8 @@
 -compile(export_all).
 -compile([debug_info]).
 
+-include("treeNode.hrl").
+
 %% ------ INIT VALUE PROVIDERS ------
 
 getOutputBoard(BoardMap) ->
@@ -315,11 +317,6 @@ testGetBoardAfterJumpMove() ->
 
 %% ------ GAME TREE ------
 
--record(node, {
-  children = [],
-  value = 0
-}).
-
 isLeaf(#node{children = Children, value = _}) -> if
                                                    Children == [] -> true;
                                                    true -> false
@@ -365,8 +362,10 @@ minimaxOuter(Node, Depth, true) ->
 
 minimaxOuter(Node, Depth, false) ->
   ChildrenMinimax = [{minimax(Child, Depth - 1, true), Child} || Child <- Node#node.children],
-  BestValue = minByFirstKey(ChildrenMinimax),
-  BestValue.
+  if
+    length(ChildrenMinimax) > 0 -> minByFirstKey(ChildrenMinimax);
+    true -> #node{children = [], value = #{}}
+  end.
 
 
 
@@ -402,6 +401,8 @@ gameScenario(NumOfMoves, Board, WhoseMove) ->
   io:format("~n", []),
   NextBoard = getBestNextBoard(Board, WhoseMove),
   gameScenario(NumOfMoves - 1, NextBoard, invertWhoseMove(WhoseMove)).
+
+getNodeValue(Node) -> Node#node.value.
 
 gameScenarioBoards() -> gameScenarioBoards(70, getStartingBoard(), 2).
 gameScenarioBoards(0, Board, WhoseMove) -> [];
