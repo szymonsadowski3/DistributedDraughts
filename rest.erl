@@ -3,8 +3,6 @@
 -compile({parse_transform, leptus_pt}).
 -compile(export_all).
 
--include("treeNode.hrl").
-
 %% DICTIONARY
 
 %% 0: empty
@@ -36,10 +34,7 @@ post("/move/:who", _Req, State) ->
   ParsedList = dra:listFromSpaceSeparatedString(ListRaw),
   ParsedBoard = dra:boardMapFromList(ParsedList),
   NextBestBoard = dra:getBestNextBoard(ParsedBoard, Who),
-  Output = if
-             NextBestBoard == #{} -> <<"end_of_game">>;
-             true -> list_to_binary(dra:getOutputBoard(NextBestBoard))
-           end,
+  Output = list_to_binary(dra:getOutputBoard(NextBestBoard)),
   %NewBoard = dra:getRandomMove(Board, Who),
   {Output, State}.
 
