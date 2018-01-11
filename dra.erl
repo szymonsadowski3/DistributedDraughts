@@ -67,7 +67,7 @@ optionalNewlineFun(Index) -> if
 printBoard(BoardMap) ->
   BoardMapToList = maps:to_list(BoardMap),
   BoardMapToListSortedByIndex = lists:keysort(1, BoardMapToList),
-  Printed = [{io:format("~p | ", [element(2, IndexValTuple)]),
+  [{io:format("~p | ", [element(2, IndexValTuple)]),
     optionalNewlineFun(element(1, IndexValTuple))} || IndexValTuple <- BoardMapToListSortedByIndex],
   io:format("~n", []).
 
@@ -149,8 +149,9 @@ promoteToKing(Board) ->
     BlackKing ->
       NewBoard = fillPositionOnBoard(Board, BlackKing, 4);
     true ->
-      Board
-  end.
+      NewBoard = Board
+  end,
+  NewBoard.
 
 getBoardAfterMove(Board, WhoseMove, [_ | ListOfPositions]) ->
   UpdatedBoard = clearAllPositionsButLast(Board, WhoseMove, ListOfPositions),
@@ -169,7 +170,7 @@ getMove(Board, 2) ->
 
 getRandomMove(Board, WhoseMove) ->
   ListOfNonEmptyMoves = findAllAvailableMoves(Board, WhoseMove),
-  Index = random:uniform(length(ListOfNonEmptyMoves)),
+  Index = rand:uniform(length(ListOfNonEmptyMoves)),
   lists:nth(Index, ListOfNonEmptyMoves).
 
 fillPositionOnBoard(Board, To, WhoseMove) ->
@@ -182,7 +183,6 @@ fillPositionOnBoard(Board, To, WhoseMove) ->
 %% ------ FINDING MOVES ------
 
 findSimpleMovesForOnePiece(Board, FromRowCol, WhoseMove) ->
-  WhoseSide = WhoseMove rem 2,
   Sign = (if WhoseMove == 1 -> 1; true -> -1 end), % 1 for white, -1 for black
   {Row, Col} = FromRowCol,
   ListOfPosLeftAndRight = [{Row + Sign * 1, Col + 1}, {Row + Sign * 1, Col - 1}],
@@ -304,7 +304,7 @@ if
       RightJumps = []
 end,
 List = LeftJumps ++ RightJumps,
-ParentPID ! {self(), LeftJumps ++ RightJumps}.
+ParentPID ! {self(), List}.
 
 findLegalJumpMovesForOnePiece(Board, FromRowCol, WhoseMove) ->
   PID = spawn(dra, findLegalJumpMovesForOnePieceDuplicates, [Board, FromRowCol, WhoseMove, self()]),
@@ -359,7 +359,8 @@ findAllAvailableMoves(Board, WhoseMove) ->
    {king, KingList} ->
       KingMoves = [[king] ++ X || X <- KingList]
   end,
- ListOfAllMoves = ListOfJumpAndSimpleMoves ++ KingMoves.
+ ListOfAllMoves = ListOfJumpAndSimpleMoves ++ KingMoves,
+ ListOfAllMoves.
 
 %% ------ END OF FINDING MOVES ------
 
@@ -403,7 +404,7 @@ getAllPossibleBoards(Board, WhoseMove) ->
 
 doAiTurn(Board, WhoseMove) ->
   Boards = getAllPossibleBoards(Board, WhoseMove),
-  ok.
+  Boards.
 
 %% ------- END OF AI FUNCTIONS ------
 
@@ -453,15 +454,15 @@ evaluateGlobal(Board) -> % Who: Integer
   BlacksLength = length(FilteredBoardBlacks),
   BlacksLength - WhitesLength.
 
-generateGameTree(Board, WhoseMove, 0) -> #node{children = [], value = Board};
+generateGameTree(Board, _, 0) -> #node{children = [], value = Board};
 generateGameTree(Board, WhoseMove, Depth) ->
   PossibleBoards = getAllPossibleBoards(Board, WhoseMove),
   DeeperTrees = [generateGameTree(PossibleBoard, invertWhoseMove(WhoseMove), Depth-1) || PossibleBoard <- PossibleBoards],
   #node{children = DeeperTrees, value = Board}.
 
 
-minimax(#node{children = [], value = Board}, Depth, MaximizingPlayer) -> evaluateGlobal(Board);
-minimax(#node{children = Children, value = Board}, 0, MaximizingPlayer) -> evaluateGlobal(Board);
+minimax(#node{children = [], value = Board}, _, _) -> evaluateGlobal(Board);
+minimax(#node{children = _, value = Board}, 0, _) -> evaluateGlobal(Board);
 minimax(Node, Depth, true) ->
 %%  BestValue = -1000, %-Inf
   ChildValues = [minimax(Child, Depth - 1, false) || Child <- Node#node.children],
@@ -496,8 +497,9 @@ isMaximizingPlayer(WhoseMove) -> if WhoseMove == 2 -> true; WhoseMove == 1 -> fa
 
 getBestNextBoard(Board, WhoseMove) ->
   GameTree = generateGameTree(Board, WhoseMove, 4), % Starting depth
-  #node{children = Children, value = BestValue} = element(2, minimaxOuter(GameTree, 4, isMaximizingPlayer(WhoseMove))),
-  FinalBoard = promoteToKing(BestValue).
+  #node{children = _, value = BestValue} = element(2, minimaxOuter(GameTree, 4, isMaximizingPlayer(WhoseMove))),
+  FinalBoard = promoteToKing(BestValue),
+  FinalBoard.
 
 
 
@@ -512,7 +514,7 @@ mainer() ->
 
 gameScenario() -> gameScenario(40, getStartingBoard(), 2).
 
-gameScenario(0, Board, WhoseMove) -> ok;
+gameScenario(0, _, _) -> ok;
 gameScenario(NumOfMoves, Board, WhoseMove) ->
   printBoard(Board),
   io:format("~n", []),
@@ -520,7 +522,7 @@ gameScenario(NumOfMoves, Board, WhoseMove) ->
   gameScenario(NumOfMoves - 1, NextBoard, invertWhoseMove(WhoseMove)).
 
 gameScenarioBoards() -> gameScenarioBoards(70, getStartingBoard(), 2).
-gameScenarioBoards(0, Board, WhoseMove) -> [];
+gameScenarioBoards(0, _, _) -> [];
 gameScenarioBoards(NumOfMoves, Board, WhoseMove) ->
   NextBoard = getBestNextBoard(Board, WhoseMove),
   [NextBoard] ++ gameScenarioBoards(NumOfMoves - 1, NextBoard, invertWhoseMove(WhoseMove)).
