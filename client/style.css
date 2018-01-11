@@ -83,3 +83,17 @@
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
+
+.starter-template {
+  margin-top: 80px;
+  text-align: center;
+}
+
+.topSpacer {
+  margin-top: 60px;
+}
+
+input.form-control.numIn {
+  width: inherit;
+}
+

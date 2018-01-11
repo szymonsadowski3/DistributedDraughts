@@ -75,7 +75,19 @@ $(document).ready(function () {
     $("#restartGame").click(function () {
         handleRestartGame();
     });
+    $("#cellSize").change(function () {
+        var newVal = $(this).val();
+        increaseSize(".white_piece", newVal);
+        increaseSize(".black_piece", newVal);
+        increaseSize(".white_king", newVal);
+        increaseSize(".black_king", newVal);
+    });
 });
+
+function increaseSize(selector, newVal) {
+    $(selector).width(newVal);
+    $(selector).height(newVal);
+}
 
 
 function visualizeBoard() {
