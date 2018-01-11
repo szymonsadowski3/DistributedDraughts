@@ -36,16 +36,16 @@ getStartingBoard() -> #{0 => 0, 1 => 1, 2 => 0, 3 => 1, 4 => 0, 5 => 1, 6 => 0, 
   90 => 2, 91 => 0, 92 => 2, 93 => 0, 94 => 2, 95 => 0, 96 => 2, 97 => 0, 98 => 2, 99 => 0
 }.
 
-getTestBoard() -> #{0 => 0, 1 => 1, 2 => 0, 3 => 1, 4 => 0, 5 => 0, 6 => 0, 7 => 1, 8 => 0, 9 => 1,
+getTestBoard() -> #{0 => 0, 1 => 1, 2 => 2, 3 => 1, 4 => 0, 5 => 0, 6 => 0, 7 => 1, 8 => 0, 9 => 1,
   10 => 1, 11 => 0, 12 => 1, 13 => 0, 14 => 1, 15 => 0, 16 => 1, 17 => 0, 18 => 1, 19 => 0,
   20 => 0, 21 => 1, 22 => 0, 23 => 0, 24 => 0, 25 => 0, 26 => 0, 27 => 1, 28 => 0, 29 => 1,
   30 => 1, 31 => 0, 32 => 1, 33 => 0, 34 => 1, 35 => 0, 36 => 1, 37 => 0, 38 => 1, 39 => 0,
   40 => 0, 41 => 0, 42 => 0, 43 => 0, 44 => 0, 45 => 0, 46 => 0, 47 => 0, 48 => 0, 49 => 0,
   50 => 0, 51 => 0, 52 => 1, 53 => 0, 54 => 0, 55 => 0, 56 => 0, 57 => 0, 58 => 0, 59 => 0,
-  60 => 0, 61 => 2, 62 => 0, 63 => 2, 64 => 0, 65 => 2, 66 => 0, 67 => 2, 68 => 0, 69 => 2,
+  60 => 0, 61 => 4, 62 => 0, 63 => 2, 64 => 0, 65 => 2, 66 => 0, 67 => 2, 68 => 0, 69 => 2,
   70 => 2, 71 => 0, 72 => 2, 73 => 0, 74 => 2, 75 => 0, 76 => 2, 77 => 0, 78 => 2, 79 => 0,
   80 => 0, 81 => 2, 82 => 0, 83 => 2, 84 => 0, 85 => 2, 86 => 0, 87 => 2, 88 => 0, 89 => 2,
-  90 => 2, 91 => 0, 92 => 2, 93 => 0, 94 => 2, 95 => 0, 96 => 2, 97 => 0, 98 => 2, 99 => 0
+  90 => 2, 91 => 0, 92 => 2, 93 => 0, 94 => 2, 95 => 1, 96 => 2, 97 => 0, 98 => 2, 99 => 0
 }.
 
 %% ------ END OF INIT VALUE PROVIDERS ------
@@ -103,6 +103,7 @@ minByFirstKey([H|T], Max) when element(1, H) < element(1, Max) -> minByFirstKey(
 minByFirstKey([_|T], Max)              -> minByFirstKey(T, Max);
 minByFirstKey([],    Max)              -> Max.
 
+
 %% ------ END OF UTILS ------
 
 %% ------ BOARD FUNCTIONS ------
@@ -136,6 +137,21 @@ clearAllPositionsButLast(Board, WhoseMove, [Position | ListOfPositions]) ->
       clearAllPositionsButLast(NewBoard, WhoseMove, ListOfPositions)
   end.
 
+promoteToKing(Board) ->
+  ListOfBlackLocations = getAllPlayerPiecesLocationsOnBoard(Board, 2),
+  ListOfWhiteLocations = getAllPlayerPiecesLocationsOnBoard(Board, 1),
+
+  WhiteKing = lists:keyfind(10,1,ListOfWhiteLocations),
+  BlackKing = lists:keyfind(0,1,ListOfBlackLocations),
+  if
+    WhiteKing ->
+      NewBoard = fillPositionOnBoard(Board, WhiteKing, 3);
+    BlackKing ->
+      NewBoard = fillPositionOnBoard(Board, BlackKing, 4);
+    true ->
+      Board
+  end.
+
 getBoardAfterMove(Board, WhoseMove, [_ | ListOfPositions]) ->
   UpdatedBoard = clearAllPositionsButLast(Board, WhoseMove, ListOfPositions),
   UpdatedBoard.
@@ -166,11 +182,98 @@ fillPositionOnBoard(Board, To, WhoseMove) ->
 %% ------ FINDING MOVES ------
 
 findSimpleMovesForOnePiece(Board, FromRowCol, WhoseMove) ->
+  WhoseSide = WhoseMove rem 2,
   Sign = (if WhoseMove == 1 -> 1; true -> -1 end), % 1 for white, -1 for black
   {Row, Col} = FromRowCol,
   ListOfPosLeftAndRight = [{Row + Sign * 1, Col + 1}, {Row + Sign * 1, Col - 1}],
   Result = [[FromRowCol, Pos] || Pos <- ListOfPosLeftAndRight, isWithinBounds(Pos) andalso isEmpty(Board, Pos)],
   Result.
+
+getAllTopLeftMoves(Board, FromRowCol, WhoseMove) ->
+  Sign = (if WhoseMove == 3 -> 1; true -> -1 end),
+  {Row, Col} = FromRowCol,
+
+  ThroughTopLeft = {Row + Sign * 1, Col - 1},
+
+  FromValue = getElementFromBoard(Board, FromRowCol),
+  ThroughValue = getElementFromBoard(Board, ThroughTopLeft),
+
+  IsLegit = isWithinBounds(ThroughTopLeft) andalso
+    FromValue-2 /= ThroughValue,
+
+  if
+    IsLegit ->
+      TopLeftBoard = maps:update(mapPositionToIndex(ThroughTopLeft), WhoseMove, Board),
+      [FromRowCol, ThroughTopLeft] ++ getAllTopLeftMoves(TopLeftBoard, ThroughTopLeft, WhoseMove);
+    true ->
+      []
+  end.
+
+getAllBottomLeftMoves(Board, FromRowCol, WhoseMove) ->
+  Sign = (if WhoseMove == 3 -> 1; true -> -1 end),
+  {Row, Col} = FromRowCol,
+
+  ThroughBottomLeft = {Row - Sign * 1, Col - 1},
+
+  FromValue = getElementFromBoard(Board, FromRowCol),
+  ThroughValue = getElementFromBoard(Board, ThroughBottomLeft),
+
+  IsLegit = isWithinBounds(ThroughBottomLeft) andalso
+    FromValue-2 /= ThroughValue,
+
+  if
+    IsLegit ->
+      BottomLeftBoard = maps:update(mapPositionToIndex(ThroughBottomLeft), WhoseMove, Board),
+      [FromRowCol, ThroughBottomLeft] ++ getAllBottomLeftMoves(BottomLeftBoard, ThroughBottomLeft, WhoseMove);
+    true ->
+      []
+  end.
+
+getAllBottomRightMoves(Board, FromRowCol, WhoseMove) ->
+  Sign = (if WhoseMove == 3 -> 1; true -> -1 end),
+  {Row, Col} = FromRowCol,
+
+  ThroughBottomRight =  {Row - Sign * 1, Col + 1},
+
+  FromValue = getElementFromBoard(Board, FromRowCol),
+  ThroughValue = getElementFromBoard(Board, ThroughBottomRight),
+
+  IsLegit = isWithinBounds(ThroughBottomRight) andalso
+    FromValue-2 /= ThroughValue,
+
+  if
+    IsLegit ->
+      BottomRightBoard = maps:update(mapPositionToIndex(ThroughBottomRight), WhoseMove, Board),
+      [FromRowCol, ThroughBottomRight] ++ getAllBottomRightMoves(BottomRightBoard, ThroughBottomRight, WhoseMove);
+    true ->
+      []
+  end.
+
+getAllTopRightMoves(Board, FromRowCol, WhoseMove) ->
+  Sign = (if WhoseMove == 3 -> 1; true -> -1 end),
+  {Row, Col} = FromRowCol,
+
+  ThroughTopRight =  {Row + Sign * 1, Col + 1},
+
+  FromValue = getElementFromBoard(Board, FromRowCol),
+  ThroughValue = getElementFromBoard(Board, ThroughTopRight),
+
+  IsLegit = isWithinBounds(ThroughTopRight) andalso
+    FromValue-2 /= ThroughValue,
+
+  if
+    IsLegit ->
+      TopRightBoard = maps:update(mapPositionToIndex(ThroughTopRight), WhoseMove, Board),
+      [FromRowCol, ThroughTopRight] ++ getAllTopRightMoves(TopRightBoard, ThroughTopRight, WhoseMove);
+    true ->
+      []
+  end.
+
+findLegalKingMovesForOnePiece(Board, FromRowCol, WhoseMove) ->
+  [remove_dups(getAllTopLeftMoves(Board, FromRowCol, WhoseMove)),
+  remove_dups(getAllBottomLeftMoves(Board,FromRowCol, WhoseMove)),
+  remove_dups(getAllTopRightMoves(Board,FromRowCol, WhoseMove)),
+  remove_dups(getAllBottomRightMoves(Board,FromRowCol, WhoseMove))].
 
 findLegalJumpMovesForOnePieceDuplicates(Board, FromRowCol, WhoseMove, ParentPID) ->
   Sign = (if WhoseMove == 1 -> 1; true -> -1 end), % 1 for white, -1 for black
@@ -227,9 +330,20 @@ findAllJumpMoves(Board, WhoseMove, SendPID) ->
   ListOfNonEmptyMoves = [Move || Move <- ListOfMoves, Move /= []],
   SendPID ! {jump, ListOfNonEmptyMoves}.
 
+findAllKingMoves(Board, WhoseMove) ->
+  ListOfPieces = getAllPlayerPiecesLocationsOnBoard(Board, WhoseMove),
+  ListOfMoves = [findLegalKingMovesForOnePiece(Board, FromRowCol, WhoseMove) || FromRowCol <- ListOfPieces],
+  ListOfMovesFlat = lists:nth(1, ListOfMoves),
+  ListOfNonEmptyMoves = [[king] ++ Move || Move <- ListOfMovesFlat, Move /= []].
+
 findAllAvailableMoves(Board, WhoseMove) ->
-  spawn(dra, findAllSimpleMoves, [Board, WhoseMove, self()]),
-  spawn(dra, findAllJumpMoves, [Board, WhoseMove, self()]),
+  if
+    WhoseMove>2 ->
+       findAllKingMoves(Board, WhoseMove);
+    true ->
+       spawn(dra, findAllSimpleMoves, [Board, WhoseMove, self()]),
+       spawn(dra, findAllJumpMoves, [Board, WhoseMove, self()])
+  end,
 
   ListOfMoves = [],
   receive
@@ -365,10 +479,8 @@ minimaxOuter(Node, Depth, true) ->
 
 minimaxOuter(Node, Depth, false) ->
   ChildrenMinimax = [{minimax(Child, Depth - 1, true), Child} || Child <- Node#node.children],
-  if
-    length(ChildrenMinimax) > 0 -> minByFirstKey(ChildrenMinimax);
-    true -> #node{children = endofgame, value = endofgame}
-  end.
+  BestValue = minByFirstKey(ChildrenMinimax),
+  BestValue.
 
 
 
@@ -383,7 +495,7 @@ isMaximizingPlayer(WhoseMove) -> if WhoseMove == 2 -> true; WhoseMove == 1 -> fa
 getBestNextBoard(Board, WhoseMove) ->
   GameTree = generateGameTree(Board, WhoseMove, 4), % Starting depth
   #node{children = Children, value = BestValue} = element(2, minimaxOuter(GameTree, 4, isMaximizingPlayer(WhoseMove))),
-  BestValue.
+  FinalBoard = promoteToKing(BestValue).
 
 
 
@@ -404,8 +516,6 @@ gameScenario(NumOfMoves, Board, WhoseMove) ->
   io:format("~n", []),
   NextBoard = getBestNextBoard(Board, WhoseMove),
   gameScenario(NumOfMoves - 1, NextBoard, invertWhoseMove(WhoseMove)).
-
-getNodeValue(Node) -> Node#node.value.
 
 gameScenarioBoards() -> gameScenarioBoards(70, getStartingBoard(), 2).
 gameScenarioBoards(0, Board, WhoseMove) -> [];

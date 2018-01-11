@@ -56,6 +56,10 @@ function visualizeBoard() {
                 table.rows[i].children[j].innerHTML = '<div class="white_piece"></div>';
             } else if (BOARDSTATE[i * COLS + j] == 2) {
                 table.rows[i].children[j].innerHTML = '<div class="black_piece"></div>';
+            } else if (BOARDSTATE[i * COLS + j] == 3) {
+                table.rows[i].children[j].innerHTML = '<div class="white_king"></div>';
+            } else if (BOARDSTATE[i * COLS + j] == 4) {
+                table.rows[i].children[j].innerHTML = '<div class="black_King"></div>';
             }
         }
     }
