@@ -4,6 +4,7 @@ var COLS = 10;
 
 BOARDSTATE = null;
 WHOSEMOVE = 2;
+HISTORY = [];
 
 function invertMove(move) {
     if(move==2){
@@ -25,22 +26,54 @@ function playerVsCpu() {
 }
 
 function initBoard() {
-    $.get(loc, function (data) {
-        BOARDSTATE = JSON.parse(data);
+    BOARDSTATE = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+        1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0,
+        1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0,
+        1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+        0, 2, 0, 2, 0, 2, 0, 2, 2, 0, 2, 0, 2,
+        0, 2, 0, 2, 0, 0, 2, 0, 2, 0, 2, 0, 2,
+        0, 2, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0];
+    visualizeBoard();
+}
+
+function handleRestartGame() {
+    WHOSEMOVE = 2;
+    HISTORY = [];
+    initBoard();
+}
+
+function handleRollbackMove() {
+    if(HISTORY.length == 0) {
+        alert('No history!');
+    } else {
+        BOARDSTATE = HISTORY.pop();
+        WHOSEMOVE = invertMove(WHOSEMOVE);
         visualizeBoard();
-    })
+    }
+}
+
+function handleNextMove() {
+    var joinedStr = BOARDSTATE.join(" ");
+
+    $.post(sendLoc + WHOSEMOVE, joinedStr).done(function (data) {
+        HISTORY.push(BOARDSTATE);
+        BOARDSTATE = JSON.parse(data);
+        WHOSEMOVE = invertMove(WHOSEMOVE);
+        visualizeBoard();
+    });
 }
 
 $(document).ready(function () {
     initBoard();
     $("#nextMove").click(function () {
-        var joinedStr = BOARDSTATE.join(" ");
-
-        $.post(sendLoc + WHOSEMOVE, joinedStr).done(function (data) {
-            BOARDSTATE = JSON.parse(data);
-            WHOSEMOVE = invertMove(WHOSEMOVE);
-            visualizeBoard();
-        });
+        handleNextMove();
+    });
+    $("#rollbackMove").click(function () {
+        handleRollbackMove();
+    });
+    $("#restartGame").click(function () {
+        handleRestartGame();
     });
 });
 
@@ -59,7 +92,7 @@ function visualizeBoard() {
             } else if (BOARDSTATE[i * COLS + j] == 3) {
                 table.rows[i].children[j].innerHTML = '<div class="white_king"></div>';
             } else if (BOARDSTATE[i * COLS + j] == 4) {
-                table.rows[i].children[j].innerHTML = '<div class="black_King"></div>';
+                table.rows[i].children[j].innerHTML = '<div class="black_king"></div>';
             }
         }
     }
