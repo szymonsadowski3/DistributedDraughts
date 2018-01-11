@@ -141,17 +141,18 @@ promoteToKing(Board) ->
   ListOfBlackLocations = getAllPlayerPiecesLocationsOnBoard(Board, 2),
   ListOfWhiteLocations = getAllPlayerPiecesLocationsOnBoard(Board, 1),
 
-  WhiteKing = lists:keyfind(10,1,ListOfWhiteLocations),
+  WhiteKing = lists:keyfind(9,1,ListOfWhiteLocations),
   BlackKing = lists:keyfind(0,1,ListOfBlackLocations),
   if
-    WhiteKing ->
-      NewBoard = fillPositionOnBoard(Board, WhiteKing, 3);
-    BlackKing ->
-      NewBoard = fillPositionOnBoard(Board, BlackKing, 4);
+    WhiteKing /= false ->
+      NewBoard = fillPositionOnBoard(Board, WhiteKing, 3),
+      NewBoard;
+    BlackKing /= false ->
+      NewBoard = fillPositionOnBoard(Board, BlackKing, 4),
+      NewBoard;
     true ->
-      NewBoard = Board
-  end,
-  NewBoard.
+      Board
+  end.
 
 getBoardAfterMove(Board, WhoseMove, [_ | ListOfPositions]) ->
   UpdatedBoard = clearAllPositionsButLast(Board, WhoseMove, ListOfPositions),
