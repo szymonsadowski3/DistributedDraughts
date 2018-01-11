@@ -5,6 +5,7 @@ var COLS = 10;
 BOARDSTATE = null;
 WHOSEMOVE = 2;
 HISTORY = [];
+CURRENT_SIZE = 40;
 
 function invertMove(move) {
     if(move==2){
@@ -76,18 +77,18 @@ $(document).ready(function () {
         handleRestartGame();
     });
     $("#cellSize").change(function () {
-        var newVal = $(this).val();
-        increaseSize(".white_piece", newVal);
-        increaseSize(".black_piece", newVal);
-        increaseSize(".white_king", newVal);
-        increaseSize(".black_king", newVal);
-        increaseSize("td", newVal);
+        CURRENT_SIZE = $(this).val();
+        updateSize(".white_piece");
+        updateSize(".black_piece");
+        updateSize(".white_king");
+        updateSize(".black_king");
+        updateSize("td");
     });
 });
 
-function increaseSize(selector, newVal) {
-    $(selector).width(newVal);
-    $(selector).height(newVal);
+function updateSize(selector) {
+    $(selector).width(CURRENT_SIZE);
+    $(selector).height(CURRENT_SIZE);
 }
 
 
@@ -99,13 +100,13 @@ function visualizeBoard() {
             if (BOARDSTATE[i * COLS + j] == 0) {
                 table.rows[i].children[j].innerHTML = '';
             } else if (BOARDSTATE[i * COLS + j] == 1) {
-                table.rows[i].children[j].innerHTML = '<div class="white_piece"></div>';
+                table.rows[i].children[j].innerHTML = '<div class="white_piece" style="width: '+CURRENT_SIZE+'px; height: '+CURRENT_SIZE+'px;"></div>';
             } else if (BOARDSTATE[i * COLS + j] == 2) {
-                table.rows[i].children[j].innerHTML = '<div class="black_piece"></div>';
+                table.rows[i].children[j].innerHTML = '<div class="black_piece" style="width: '+CURRENT_SIZE+'px; height: '+CURRENT_SIZE+'px;"></div>';
             } else if (BOARDSTATE[i * COLS + j] == 3) {
-                table.rows[i].children[j].innerHTML = '<div class="white_king"></div>';
+                table.rows[i].children[j].innerHTML = '<div class="white_king" style="width: '+CURRENT_SIZE+'px; height: '+CURRENT_SIZE+'px;"></div>';
             } else if (BOARDSTATE[i * COLS + j] == 4) {
-                table.rows[i].children[j].innerHTML = '<div class="black_king"></div>';
+                table.rows[i].children[j].innerHTML = '<div class="black_king" style="width: '+CURRENT_SIZE+'px; height: '+CURRENT_SIZE+'px;"></div>';
             }
         }
     }
