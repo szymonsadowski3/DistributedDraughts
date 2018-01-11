@@ -5,6 +5,7 @@
 %% 2: black
 
 -module(dra).
+
 -import(io, [format/2]).
 -import(lists, [keysort/2]).
 
@@ -13,9 +14,11 @@
 
 %% ------ INIT VALUE PROVIDERS ------
 
-getOutputBoard(Board) ->
-  BoardList = [maps:get(Index, Board) || Index <- lists:seq(0,99)],
-  io_lib:format("~w", [BoardList]).
+getOutputBoard(BoardMap) ->
+  BoardMapToList = maps:to_list(BoardMap),
+  BoardMapToListSortedByIndex = lists:keysort(1, BoardMapToList),
+  BoardMapToListSortedByIndexSecElements = [element(2, X) || X <- BoardMapToListSortedByIndex],
+  io_lib:format("~w", [BoardMapToListSortedByIndexSecElements]).
 
 getOutputBoards(Boards) ->
   ListOfOutputBoards = [getOutputBoard(Board) || Board <- Boards],
@@ -169,6 +172,15 @@ findSimpleMovesForOnePiece(Board, FromRowCol, WhoseMove) ->
   Result = [[FromRowCol, Pos] || Pos <- ListOfPosLeftAndRight, isWithinBounds(Pos) andalso isEmpty(Board, Pos)],
   Result.
 
+findLegalKingMovesForOnePiece(Board, FromRowCol, WhoseMove) ->
+  Sign = (if WhoseMove == 3 -> 1; true -> -1 end),
+  {Row, Col} = FromRowCol,
+  TopLeft = {Row + Sign * 1, Col - 1},
+  TopRight = {Row + Sign * 1, Col + 1},
+  BottomLeft = {Row - Sign * 1, Col - 1},
+  BottomRight = {Row - Sign * 1, Col + 1},
+
+
 findLegalJumpMovesForOnePieceDuplicates(Board, FromRowCol, WhoseMove, ParentPID) ->
   Sign = (if WhoseMove == 1 -> 1; true -> -1 end), % 1 for white, -1 for black
 
@@ -224,9 +236,19 @@ findAllJumpMoves(Board, WhoseMove, SendPID) ->
   ListOfNonEmptyMoves = [Move || Move <- ListOfMoves, Move /= []],
   SendPID ! {jump, ListOfNonEmptyMoves}.
 
+findAllKingMoves(Board, WhoseMove) ->
+  ListOfPieces = getAllPlayerPiecesLocationsOnBoard(Board, WhoseMove),
+  ListOfMoves = [findLegalKingMovesForOnePiece(Board, FromRowCol, WhoseMove) || FromRowCol <- ListOfPieces],
+  ListOfNonEmptyMoves = [Move || Move <- ListOfMoves, Move /= []].
+
 findAllAvailableMoves(Board, WhoseMove) ->
-  spawn(dra, findAllSimpleMoves, [Board, WhoseMove, self()]),
-  spawn(dra, findAllJumpMoves, [Board, WhoseMove, self()]),
+  if
+    WhoseMove>2 ->
+       findAllKingMoves(Board, WhoseMove);
+    true ->
+       spawn(dra, findAllSimpleMoves, [Board, WhoseMove, self()]),
+       spawn(dra, findAllJumpMoves, [Board, WhoseMove, self()])
+  end.
 
   ListOfMoves = [],
   receive
@@ -235,7 +257,10 @@ findAllAvailableMoves(Board, WhoseMove) ->
   end,
  receive
     {jump, JumpList} ->
-      ListOfAllMoves = ListOfSimpleMoves ++ [[jump] ++ X || X <- JumpList]
+      ListOfAllMoves = if
+                         length(JumpList) > 0 -> [[jump] ++ X || X <- JumpList];
+                         true -> ListOfSimpleMoves ++ [[jump] ++ X || X <- JumpList]
+                       end
  end,
  ListOfAllMoves.
 
@@ -281,7 +306,7 @@ getAllPossibleBoards(Board, WhoseMove) ->
 
 doAiTurn(Board, WhoseMove) ->
   Boards = getAllPossibleBoards(Board, WhoseMove),
-  Boards.
+  ok.
 
 %% ------- END OF AI FUNCTIONS ------
 
@@ -331,28 +356,38 @@ evaluateGlobal(Board) -> % Who: Integer
   BlacksLength = length(FilteredBoardBlacks),
   BlacksLength - WhitesLength.
 
-generateGameTree(Board, _, 0) -> #node{children = [], value = {evaluateGlobal(Board), Board}};
+generateGameTree(Board, WhoseMove, 0) -> #node{children = [], value = Board};
 generateGameTree(Board, WhoseMove, Depth) ->
   PossibleBoards = getAllPossibleBoards(Board, WhoseMove),
   DeeperTrees = [generateGameTree(PossibleBoard, invertWhoseMove(WhoseMove), Depth-1) || PossibleBoard <- PossibleBoards],
-  #node{children = DeeperTrees, value = {evaluateGlobal(Board), Board}}.
+  #node{children = DeeperTrees, value = Board}.
 
 
-minimax(#node{children = Children, value = Val}, 0, MaximizingPlayer) -> Val;
-minimax(#node{children = [], value = Val}, Depth, MaximizingPlayer) -> Val;
+minimax(#node{children = [], value = Board}, Depth, MaximizingPlayer) -> evaluateGlobal(Board);
+minimax(#node{children = Children, value = Board}, 0, MaximizingPlayer) -> evaluateGlobal(Board);
 minimax(Node, Depth, true) ->
 %%  BestValue = -1000, %-Inf
-%%  ChildValues = [minimax(Child, Depth - 1, false) || Child <- Node#node.children],
-  ChildrenMinimax = [minimax(Child, Depth - 1, false) || Child <- Node#node.children],
-%%  Res = lists:keysort(1, ChildrenMinimax),
-  BestValue = maxByFirstKey(ChildrenMinimax),
+  ChildValues = [minimax(Child, Depth - 1, false) || Child <- Node#node.children],
+  BestValue = lists:max(ChildValues),
   BestValue;
 
 minimax(Node, Depth, false) ->
 %%  BestValue = -1000, %-Inf
-  ChildrenMinimax = [minimax(Child, Depth - 1, true) || Child <- Node#node.children],
+  ChildValues = [minimax(Child, Depth - 1, true) || Child <- Node#node.children],
+  BestValue = lists:min(ChildValues),
+  BestValue.
+
+minimaxOuter(Node, Depth, true) ->
+  ChildrenMinimax = [{minimax(Child, Depth - 1, false), Child} || Child <- Node#node.children],
+  BestValue = maxByFirstKey(ChildrenMinimax),
+  BestValue;
+
+minimaxOuter(Node, Depth, false) ->
+  ChildrenMinimax = [{minimax(Child, Depth - 1, true), Child} || Child <- Node#node.children],
   BestValue = minByFirstKey(ChildrenMinimax),
   BestValue.
+
+
 
 isMaximizingPlayer(WhoseMove) -> if WhoseMove == 2 -> true; WhoseMove == 1 -> false end.
 
@@ -363,30 +398,27 @@ isMaximizingPlayer(WhoseMove) -> if WhoseMove == 2 -> true; WhoseMove == 1 -> fa
 %%  lists:nth(1, FilteredBoard).
 
 getBestNextBoard(Board, WhoseMove) ->
-  GameTree = generateGameTree(Board, WhoseMove, 3),
-  BestValue = minimax(GameTree, 3, isMaximizingPlayer(WhoseMove)),
-  element(2, BestValue).
+  GameTree = generateGameTree(Board, WhoseMove, 4), % Starting depth
+  #node{children = Children, value = BestValue} = element(2, minimaxOuter(GameTree, 4, isMaximizingPlayer(WhoseMove))),
+  BestValue.
 
 
 
 %% ------- MAINER ------
 mainer() ->
-%%  Result = getAllPossibleBoards(getTestBoard(), 2), 
+%%  Result = getAllPossibleBoards(getTestBoard(), 2),
 %%  Result = generateGameTree(getTestBoard(), 2, 3),
 %%  Res = minimax(Result, 3, true),
-  Res = getOutputBoards(gameScenarioBoards),
   gameScenario().
 %%  Res = getBestNextBoard(getTestBoard(), 2),
 %%  printBoards(Res).
 
-%% ------ SCENARIOS ------
-
-gameScenario() -> gameScenario(70, getStartingBoard(), 2).
+gameScenario() -> gameScenario(40, getStartingBoard(), 2).
 
 gameScenario(0, Board, WhoseMove) -> ok;
 gameScenario(NumOfMoves, Board, WhoseMove) ->
   printBoard(Board),
-  io:format("~p~n", [NumOfMoves]),
+  io:format("~n", []),
   NextBoard = getBestNextBoard(Board, WhoseMove),
   gameScenario(NumOfMoves - 1, NextBoard, invertWhoseMove(WhoseMove)).
 
@@ -397,4 +429,4 @@ gameScenarioBoards(NumOfMoves, Board, WhoseMove) ->
   [NextBoard] ++ gameScenarioBoards(NumOfMoves - 1, NextBoard, invertWhoseMove(WhoseMove)).
 
 listFromSpaceSeparatedString(Str) -> [begin {Int,_}=string:to_integer(Token), Int end|| Token<-string:tokens(Str," ")].
-boardMapFromList(Lista) -> maps:from_list(lists:zip(Lista, lists:seq(0, length(Lista)))).
+boardMapFromList(Lista) -> maps:from_list(lists:zip(lists:seq(0, length(Lista) - 1), Lista)).
