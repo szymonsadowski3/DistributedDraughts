@@ -98,7 +98,7 @@ function visualizeBoard() {
     for (var i = 0; i < COLS; ++i) {
         for (var j = 0; j < COLS; ++j) {
             if (BOARDSTATE[i * COLS + j] == 0) {
-                table.rows[i].children[j].innerHTML = '';
+                table.rows[i].children[j].innerHTML = '<div style="width: '+CURRENT_SIZE+'px; height: '+CURRENT_SIZE+'px;"></div>';
             } else if (BOARDSTATE[i * COLS + j] == 1) {
                 table.rows[i].children[j].innerHTML = '<div class="white_piece" style="width: '+CURRENT_SIZE+'px; height: '+CURRENT_SIZE+'px;"></div>';
             } else if (BOARDSTATE[i * COLS + j] == 2) {
