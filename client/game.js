@@ -81,6 +81,7 @@ $(document).ready(function () {
         increaseSize(".black_piece", newVal);
         increaseSize(".white_king", newVal);
         increaseSize(".black_king", newVal);
+        increaseSize("td", newVal);
     });
 });
 
