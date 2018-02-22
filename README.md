@@ -1,23 +1,31 @@
-# Projekt pod tytułem "Rozproszony silnik warcabowy"
+# Projekt "Rozproszony silnik warcabowy"
 
 # Autorzy:
 
 - Szymon Sadowski, rok III, kierunek Informatyka, grupa 2b
 - Krzysztof Szczyrbak, rok III, kierunek Informatyka, grupa 2b
 
-# Data oddania: ?
+# Data oddania: 19.01.2017 r.
 
 # Cel programu
 
 Celem niniejszego projektu było stworzenie silnika warcabowego, który wykorzystując mechanizmy wielowątkowości równolegle przeszukiwałby możliwe ruchy na planszy. Aby zwizualizować efekt działania silnika, postanowiliśmy również przygotować aplikację webową, która prezentuje przebieg rozgrywki. 
 
-# Opis i schemat struktury zadaniowej programu : xD
+# Opis i schemat struktury zadaniowej programu
+
+[[https://github.com/szymonsadowski3/DistributedDraughts/blob/master/cooperation.png|alt=cooperation]]
+
 
 # Informacje o stosowanych pakietach zewnętrznych (niestandardowych)
 
 Projekt wykorzystuje pakiet Leptus (dostępny do pobrania pod adresem [https://github.com/sinasamavati/leptus](https://github.com/sinasamavati/leptus)). Pakiet Leptus posłużył nam do wystawienia REST-owego API (Programistycznego Interfejsu Aplikacji) przez sieć, tak aby można było stworzyć aplikację webową.
 
-# Informacje o zastosowaniu specyficznych metod rozwiązania problemu: ?
+# Informacje o zastosowaniu specyficznych metod rozwiązania problemu: 
+
+Ruchy sztucznej inteligencji generowane są na podstawie drzewa ruchów, w którym w liściu znajduje się typ reprezentujący planszę w danym ruchu oraz wartość integer określana za użyciem funkcji oceniającej. <p>
+W naszym przypadku funkcja oceniająca składa się wyłącznie z porównania ilości pionków własnych w stosunku do ilości pionków przeciwnika - najlepsza plansza to taka, w której znajduje się jak najmniej pionków przeciwnika. <p>
+Algorytm wyszukiwania wszystkich możliwych ruchów dla danego pionka wykorzystuje współbieżność. <p> W trzech osobnych wątkach wyszukiwane są odpowiednio ruchy proste, ruchy ze zbiciem, oraz ruchy hetmanów. 
+
 
 # Krótka instrukcja obsługi
 
@@ -43,17 +51,27 @@ Gdy serwer wystartował, możemy przejść do katalogu client i w przeglądarce 
 
 # Testy, przykłady
 
+## Testy
+- Projekt zawiera unit testy, aby je uruchomić należy wykonać następujące kroki:
+```
+erl tests.erl
+c(tests).
+tests:test().
+```
+
+## Przykładowy przebieg programu po pewnej ilości ruchów
+[[https://github.com/szymonsadowski3/DistributedDraughts/blob/master/exampleRun.PNG|alt=exampleRun]]
+
 # Możliwe rozszerzenia programu
 
 - Zastosowanie algorytmu alpha-beta pruning na drzewie, dzięki czemu algorytm minimax wyznaczania najlepszego ruchu, znajdywałby ruch szybciej
+- Rozbudowanie części front-end projektu, m.in. dodanie trybu gracz vs ai lub nawet gracz vs gracz
 - Możliwość wybrania alternatywnych zasad (jak na przykład zasady poruszania się damką: o dowolną liczbę pól/ tylko o jedno pole)
 - Bardziej wyszukana funkcja oceniająca planszę
 
 # Ograniczenia programu
 
 - Brak możliwości generowania i przeszukiwania drzewa gry o dużej głębokości (nie zastosowano algorytmów optymalizujących jak na przykład alpha-beta pruning)
-- Zbugowane damki /s
 
 # Inne informacje zależne od tematu
-
-
+brak.
