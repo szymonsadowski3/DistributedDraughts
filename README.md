@@ -13,7 +13,7 @@ Celem niniejszego projektu było stworzenie silnika warcabowego, który wykorzys
 
 # Opis i schemat struktury zadaniowej programu
 
-[[https://github.com/szymonsadowski3/DistributedDraughts/blob/master/cooperation.png|alt=cooperation]]
+![cooperation](https://raw.githubusercontent.com/szymonsadowski3/DistributedDraughts/master/docs/cooperation.png)
 
 
 # Informacje o stosowanych pakietach zewnętrznych (niestandardowych)
@@ -60,7 +60,7 @@ tests:test().
 ```
 
 ## Przykładowy przebieg programu po pewnej ilości ruchów
-[[https://github.com/szymonsadowski3/DistributedDraughts/blob/master/exampleRun.PNG|alt=exampleRun]]
+![run](https://raw.githubusercontent.com/szymonsadowski3/DistributedDraughts/master/docs/exampleRun.PNG)
 
 # Możliwe rozszerzenia programu
 
