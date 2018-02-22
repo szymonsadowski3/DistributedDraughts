@@ -647,8 +647,8 @@ isMaximizingPlayer(WhoseMove) -> if WhoseMove == 2 -> true; WhoseMove == 1 -> fa
 %%  lists:nth(1, FilteredBoard).
 
 getBestNextBoard(Board, WhoseMove) ->
-  GameTree = generateGameTree(Board, WhoseMove, 4), % Starting depth
-  #node{children = _, value = BestValue} = element(2, minimaxOuter(GameTree, 4, isMaximizingPlayer(WhoseMove))),
+  GameTree = generateGameTree(Board, WhoseMove, 3), % Starting depth
+  #node{children = _, value = BestValue} = element(2, minimaxOuter(GameTree, 3, isMaximizingPlayer(WhoseMove))),
   FinalBoard = promoteToKing(BestValue),
   FinalBoard.
 

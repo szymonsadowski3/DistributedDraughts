@@ -1,8 +1,0 @@
-I would start with something dead simple: material difference. Which is equal to: (# of my checkers on board) -
-(# of opponent's checkers on board).
-Then you could add more features and begin to weight them, like
-"# of exposed checkers",
-"# of protected checkers", or perhaps
-"# of squares controlled in middle of board", and so on.
-Talk to a domain expert (i.e. a checkers player)
-and/or consult a checkers book to see what would work out well.
